@@ -1,0 +1,56 @@
+Symbol,Description,Peak -logP,Effect Size,Peak Location,Location
+Nipal2,NIPA-like domain containing 2,9.6,-0.38,Chr4: 177.956565,Chr7: 65.884806
+Cyp51,"cytochrome P450, family 51",8.6,-0.339,Chr4: 177.055251,Chr4: 30.036955
+Hmgcs1,3-hydroxy-3-methylglutaryl-CoA synthase 2,8.5,-0.342,Chr4: 177.956565,Chr2: 51.649367
+Sqle,squalene epoxidase,8.4,-0.485,Chr4: 179.868683,Chr7: 90.867972
+Cib2,calcium and integrin binding family member 2,8.2,-0.649,Chr4: 180.368710,Chr8: 54.947156
+Gimd1,GIMAP family P-loop NTPase domain containing 1,7.9,-0.585,Chr4: 177.055251,Chr2: 221.103890
+Cyp2c12,"cytochrome P450, family 2, subfamily c, polypeptide 12",7.9,-0.529,Chr4: 179.868683,Chr1: 238.757010
+Dhrs7l1,dehydrogenase/reductase (SDR family) member 7-like 1,7.8,-0.368,Chr4: 178.959372,Chr6: 91.312009
+Stc1,stanniocalcin 1,7.6,-0.43,Chr4: 177.847084,Chr15: 44.299590
+Abcg8,ATP binding cassette subfamily G member 8,7.6,-0.427,Chr4: 177.956565,Chr6: 9.964911
+Cavin3,caveolae associated protein 3,7.5,-0.346,Chr4: 180.368710,Chr1: 159.828137
+Tle3,"TLE family member 3, transcriptional corepressor",7.4,-0.361,Chr4: 177.847084,Chr8: 61.857790
+Tmem97,transmembrane protein 97,7.3,-0.257,Chr4: 178.959372,Chr10: 63.447310
+Fdps,farnesyl diphosphate synthase,7.2,-0.323,Chr4: 179.868683,Chr2: 174.507030
+Msmo1,methylsterol monooxygenase 1,7.1,-0.376,Chr4: 177.959120,Chr16: 24.980679
+Clstn1,calsyntenin 1,7.1,-0.228,Chr4: 177.956565,Chr5: 160.031234
+Acss2,acyl-CoA synthetase short-chain family member 2,7.1,-0.2,Chr4: 177.959120,Chr3: 144.003899
+Atrnl1,attractin like 1,7.0,-0.26,Chr4: 178.959372,Chr1: 256.670975
+Akr7a3,aldo-keto reductase family 7 member A3,7.0,-0.323,Chr4: 180.368710,Chr5: 151.590967
+Prrg4,proline rich and Gla domain 4,7.0,-0.376,Chr4: 177.055251,Chr3: 91.243346
+Fdft1,farnesyl diphosphate farnesyl transferase 1,7.0,-0.228,Chr4: 177.959120,Chr15: 37.440197
+Csad,cysteine sulfinic acid decarboxylase,6.8,-0.271,Chr4: 177.055251,Chr7: 133.337913
+Obp3,alpha-2u globulin PGCL4,6.8,-0.316,Chr4: 179.293812,Chr5: 74.845857
+Idi1,isopentenyl-diphosphate delta isomerase 1,6.7,-0.368,Chr4: 177.959120,Chr17: 61.637256
+Ubap1l,ubiquitin associated protein 1-like,6.6,-0.305,Chr4: 177.847084,Chr8: 65.877487
+Grin2c,glutamate ionotropic receptor NMDA type subunit 2C,6.4,-0.38,Chr4: 177.959120,Chr10: 100.507082
+Tm7sf2,transmembrane 7 superfamily member 2,6.4,-0.284,Chr4: 177.055251,Chr1: 203.360286
+Cacnb2,calcium voltage-gated channel auxiliary subunit beta 2,6.4,-0.328,Chr4: 177.847084,Chr17: 77.564629
+Me1,malic enzyme 1,6.3,-0.261,Chr4: 177.055251,Chr8: 87.660250
+Acsl3,acyl-CoA synthetase long-chain family member 3,6.3,-0.295,Chr4: 177.956565,Chr9: 80.115163
+Dpp6,dipeptidyl peptidase like 6,6.2,-0.403,Chr4: 178.959372,Chr4: 8.508665
+Nox4,NADPH oxidase 4,6.2,-0.331,Chr4: 177.956565,Chr1: 140.900885
+Ocstamp,osteoclast stimulatory transmembrane protein,6.2,-0.336,Chr4: 177.055251,Chr3: 154.141610
+Dhcr7,7-dehydrocholesterol reductase,6.1,-0.313,Chr4: 177.956565,Chr1: 199.015080
+Tex36,testis expressed 36,6.1,-0.314,Chr4: 179.868683,Chr1: 188.404447
+Incenp,inner centromere protein,6.0,-0.272,Chr4: 178.959372,Chr1: 206.550574
+Mab21l3,mab-21 like 3,6.0,-0.262,Chr4: 177.956565,Chr2: 189.271651
+Tmem86a,transmembrane protein 86A,5.9,-0.276,Chr4: 177.959120,Chr1: 97.595909
+Usp39,ubiquitin specific peptidase 39,5.9,-0.172,Chr4: 178.959372,Chr4: 104.403189
+Abcg5,ATP binding cassette subfamily G member 5,5.9,-0.294,Chr4: 177.055251,Chr6: 9.965117
+Cryl1,"crystallin, lambda 1",5.9,-0.26,Chr4: 180.368710,Chr15: 31.545996
+Ccdc162,coiled-coil domain containing 162,5.9,-0.287,Chr4: 178.959372,Chr20: 45.237904
+Panx2,pannexin 2,5.8,-0.28,Chr4: 177.956565,Chr7: 120.139258
+Rab11fip5,RAB11 family interacting protein 5,5.8,-0.193,Chr4: 177.956565,Chr4: 117.908818
+Bhlha15,"basic helix-loop-helix family, member a15",5.8,-0.334,Chr4: 179.293812,Chr12: 10.424640
+Pkd1l2,polycystin 1 like 2,5.7,-0.324,Chr4: 178.959372,Chr19: 45.136502
+Lrrc28,leucine rich repeat containing 28,5.7,-0.129,Chr4: 177.959120,Chr1: 121.245804
+Abcb9,ATP binding cassette subfamily B member 9,5.7,0.388,Chr4: 177.346873,Chr12: 32.499212
+Sectm1b,secreted and transmembrane 1B,5.6,-0.254,Chr4: 178.959372,Chr10: 106.333778
+Mme,membrane metallo-endopeptidase,5.6,-0.385,Chr4: 179.794176,Chr2: 147.686912
+Tmbim1,transmembrane BAX inhibitor motif containing 1,5.6,-0.215,Chr4: 177.956565,Chr9: 75.888623
+Slc22a6,solute carrier family 22 member 6,5.5,-0.371,Chr4: 179.293812,Chr1: 205.522578
+Slc39a4,solute carrier family 39 member 4,5.5,-0.212,Chr4: 178.959372,Chr7: 108.337552
+Extl1,exostosin-like glycosyltransferase 1,5.5,-0.213,Chr4: 177.055251,Chr5: 146.589114
+Cyp2b3,"cytochrome P450, family 2, subfamily b, polypeptide 3",5.5,-0.14,Chr4: 177.959120,Chr1: 81.652761

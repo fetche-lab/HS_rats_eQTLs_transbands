@@ -1,0 +1,74 @@
+Symbol,Description,Peak -logP,Effect Size,Peak Location,Location
+Spats1,"spermatogenesis associated, serine-rich 1",8.0,0.176,Chr5: 68.675208,Chr9: 15.527178
+Elp4,elongator acetyltransferase complex subunit 4,7.6,0.117,Chr5: 68.651851,Chr3: 92.385250
+Pou2f1,POU class 2 homeobox 1,7.3,0.114,Chr5: 68.651851,Chr13: 78.263305
+Plag1,PLAG1 zinc finger,7.1,0.177,Chr5: 68.651851,Chr5: 16.956726
+Bmal1,basic helix-loop-helix ARNT like 1,7.0,-0.237,Chr5: 68.653657,Chr1: 167.331755
+Arhgap42,Rho GTPase activating protein 42,6.8,0.124,Chr5: 68.651851,Chr8: 6.384496
+Bicral,BICRA like chromatin remodeling complex associated protein,6.8,0.136,Chr5: 68.651851,Chr9: 14.100252
+Tomm20l,translocase of outer mitochondrial membrane 20 like,6.7,0.141,Chr5: 68.651851,Chr6: 89.594015
+Sgpp2,sphingosine-1-phosphate phosphatase 2,6.7,0.289,Chr5: 68.651851,Chr9: 79.762657
+Asxl3,ASXL transcriptional regulator 3,6.7,-0.3,Chr5: 68.653657,Chr18: 13.593528
+Akap5,A-kinase anchoring protein 5,6.7,-0.244,Chr5: 68.653657,Chr6: 95.051526
+Csf2rb,colony stimulating factor 2 receptor subunit beta,6.6,-0.163,Chr5: 68.653657,Chr7: 109.876918
+Lad1,ladinin 1,6.6,0.481,Chr5: 68.124957,Chr13: 47.249604
+Abtb3,ankyrin repeat and BTB domain containing 3,6.4,0.192,Chr5: 68.651851,Chr7: 18.310717
+Tia1,TIA1 cytotoxic granule-associated RNA binding protein,6.4,0.106,Chr5: 68.675208,Chr4: 118.852764
+Nrf1,nuclear respiratory factor 1,6.4,0.116,Chr5: 68.651851,Chr4: 58.664931
+Cdk12,cyclin-dependent kinase 12,6.4,0.109,Chr5: 68.651851,Chr10: 83.201176
+Usp42,ubiquitin specific peptidase 42,6.3,0.11,Chr5: 68.651851,Chr12: 10.800863
+Nrp2,neuropilin 2,6.3,-0.142,Chr5: 68.653657,Chr9: 64.122814
+Tra2a,transformer 2 alpha,6.3,0.109,Chr5: 68.675208,Chr4: 78.239736
+Ppp1r26,"protein phosphatase 1, regulatory subunit 26",6.3,0.183,Chr5: 68.651851,Chr3: 11.781503
+Zfp318,zinc finger protein 318,6.2,0.126,Chr5: 68.651851,Chr9: 14.601556
+Gtf3c2,general transcription factor IIIC subunit 2,6.2,0.12,Chr5: 68.651851,Chr6: 25.196438
+Srrm2,serine/arginine repetitive matrix 2,6.2,0.136,Chr5: 68.651851,Chr10: 12.815470
+Lef1,lymphoid enhancer binding factor 1,6.2,0.241,Chr5: 68.651851,Chr2: 219.666548
+Arhgef5,Rho guanine nucleotide exchange factor 5,6.2,0.162,Chr5: 69.820613,Chr4: 72.087312
+Ccnl1,cyclin L1,6.1,0.105,Chr5: 68.651851,Chr2: 150.199523
+Arhgef26,Rho guanine nucleotide exchange factor 26,6.0,0.218,Chr5: 68.675208,Chr2: 146.740335
+Nsun3,NOP2/Sun RNA methyltransferase 3,6.0,0.113,Chr5: 68.651851,Chr11: 37.490831
+Pwwp2a,PWWP domain containing 2A,6.0,0.1,Chr5: 68.651851,Chr10: 28.155508
+Chd2,chromodomain helicase DNA binding protein 2,6.0,0.114,Chr5: 68.651851,Chr1: 127.317040
+Pfpl,pore forming protein-like,6.0,0.229,Chr5: 68.651851,Chr1: 209.412058
+Tp53i11,tumor protein p53 inducible protein 11,6.0,0.166,Chr5: 68.651851,Chr3: 79.144823
+Zfp799,zinc finger protein 799,6.0,0.112,Chr5: 68.651851,Chr7: 11.910808
+Rcor1,REST corepressor 1,5.9,0.116,Chr5: 68.651851,Chr6: 130.069605
+Ankmy1,ankyrin repeat and MYND domain containing 1,5.9,0.171,Chr5: 68.651851,Chr9: 93.476598
+Rnf43,ring finger protein 43,5.8,0.151,Chr5: 68.651851,Chr10: 72.461507
+Rap1gap,Rap1 GTPase-activating protein,5.8,0.503,Chr5: 68.675208,Chr5: 149.873986
+Ubp1,upstream binding protein 1,5.8,0.115,Chr5: 68.651851,Chr8: 113.869770
+Celsr1,"cadherin, EGF LAG seven-pass G-type receptor 1",5.8,0.248,Chr5: 69.820613,Chr7: 117.125034
+Znf750,zinc finger protein 750,5.8,0.161,Chr5: 68.651851,Chr10: 106.781185
+Celf3,"CUGBP, Elav-like family member 3",5.8,-0.207,Chr5: 68.653657,Chr2: 182.116033
+Npas2,neuronal PAS domain protein 2,5.8,-0.218,Chr5: 68.653657,Chr9: 41.463360
+Sp4,Sp4 transcription factor,5.7,0.121,Chr5: 68.651851,Chr6: 139.252740
+Pan2,poly(A) specific ribonuclease subunit PAN2,5.7,0.132,Chr5: 68.651851,Chr7: 0.729145
+Baz2a,"bromodomain adjacent to zinc finger domain, 2A",5.7,0.138,Chr5: 68.651851,Chr7: 0.523203
+Wsb1,WD repeat and SOCS box-containing 1,5.7,0.122,Chr5: 68.675208,Chr10: 64.219038
+Ankrd55,ankyrin repeat domain 55,5.7,0.232,Chr5: 68.675208,Chr2: 43.883876
+Mettl21a,"methyltransferase 21A, HSPA lysine",5.7,0.104,Chr5: 68.651851,Chr9: 65.999963
+Mdm4,MDM4 regulator of p53,5.7,0.109,Chr5: 68.651851,Chr13: 44.516164
+Kmt2e,lysine methyltransferase 2E,5.7,0.102,Chr5: 68.651851,Chr4: 11.727372
+Rttn,rotatin,5.7,0.106,Chr5: 68.651851,Chr18: 82.220998
+Kmt2c,lysine methyltransferase 2C,5.7,0.109,Chr5: 68.651851,Chr4: 9.620637
+Cry1,cryptochrome circadian regulator 1,5.6,0.193,Chr5: 69.175198,Chr7: 18.529822
+Ermp1,endoplasmic reticulum metallopeptidase 1,5.6,0.093,Chr5: 68.675208,Chr1: 227.422119
+Kat6b,lysine acetyltransferase 6B,5.6,0.112,Chr5: 68.651851,Chr15: 2.811976
+Pla2g4b,phospholipase A2 group IVB,5.6,0.198,Chr5: 68.651851,Chr3: 107.004568
+Rnf157,ring finger protein 157,5.6,0.223,Chr5: 68.651851,Chr10: 101.639873
+P2ry4,uncharacterized P2ry4,5.6,0.123,Chr5: 68.651851,ChrX: 65.717403
+Phf2,PHD finger protein 2,5.6,0.126,Chr5: 68.651851,Chr17: 15.783220
+Sos1,SOS Ras/Rac guanine nucleotide exchange factor 1,5.5,0.095,Chr5: 68.651851,Chr6: 14.533869
+Kmt2a,lysine methyltransferase 2A,5.5,0.132,Chr5: 68.651851,Chr8: 45.193319
+Supt3h,"SPT3 homolog, SAGA and STAGA complex component",5.5,0.108,Chr5: 68.651851,Chr9: 16.206767
+Ccnj,cyclin J,5.5,0.114,Chr5: 68.651851,Chr1: 239.659587
+Iws1,"interacts with SUPT6H, CTD assembly factor 1",5.5,0.101,Chr5: 68.651851,Chr18: 23.695495
+Gp1ba,glycoprotein Ib platelet subunit alpha,5.5,0.185,Chr5: 68.651851,Chr10: 55.352937
+Gan,gigaxonin,5.5,0.118,Chr5: 68.651851,Chr19: 45.207782
+Ubn2,ubinuclein 2,5.5,0.094,Chr5: 68.651851,Chr4: 67.165277
+B4galnt2,"beta-1,4-N-acetyl-galactosaminyl transferase 2",5.5,0.143,Chr5: 68.651851,Chr10: 80.828004
+Dnhd1,dynein heavy chain domain 1,5.5,0.155,Chr5: 68.651851,Chr1: 159.990784
+Pnisr,PNN interacting serine and arginine rich protein,5.5,0.113,Chr5: 68.651851,Chr5: 35.395964
+Zfp113,zinc finger protein 3,5.5,0.108,Chr5: 68.651851,Chr12: 17.033775
+Pde7a,phosphodiesterase 7A,5.5,0.118,Chr5: 68.651851,Chr2: 101.806852

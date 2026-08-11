@@ -1,646 +1,1633 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Felix Lisso" />
-  <meta name="dcterms.date" content="2026-07-30" />
-  <title>Progress Report: LD-based trans eQTL bands and GO/KEGG enrichment in HS rat adipose and liver</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HS Rat Trans-eQTL Hotspot Report — Adipose & Liver</title>
+  <meta name="description" content="Interactive summary of cis/trans eQTL classification, trans-band discovery, candidate driver genes and pangenome next steps in HS rats.">
+
+  <!--
+    FINAL INTERACTIVE REPORT
+    ========================
+    This file is intentionally self-contained: all CSS and JS live inline so the
+    report can be opened directly in a browser without any build step or local
+    server.  It merges the narrative structure of index.html with the cleaner,
+    tabbed layout of hs_rat_eqtl_report.html, adds the drafted abstract from
+    main.pdf, and keeps the interactive features (tabs, sortable tables,
+    expandable objectives, hoverable bar charts) in plain vanilla JS.
+
+    External dependencies: none.  All data arrays are embedded at the bottom of
+    the file so the report works offline.
+  -->
+
   <style>
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
+    /* ------------------------------------------------------------------
+       DESIGN TOKENS
+       A small set of CSS variables keeps the colour palette consistent and
+       makes the report easy to re-theme.
+       ------------------------------------------------------------------ */
+    :root {
+      --bg: #f8f8f6;
+      --surface: #ffffff;
+      --ink: #1d2422;
+      --ink-soft: #5c6461;
+      --ink-faint: #8b928f;
+      --line: #e5e2d9;
+      --teal: #0e6b67;
+      --teal-soft: #e4f0ef;
+      --adipose: #b85c38;
+      --adipose-soft: #f7ebe2;
+      --liver: #3b6e8f;
+      --liver-soft: #e4eef4;
+      --flag: #9f7b00;
+      --flag-soft: #fbf1dc;
+      --radius: 10px;
+      --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    ::selection { background: var(--teal-soft); }
+
+    h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+
+    a { color: var(--teal); }
+    a:hover { text-decoration: underline; }
+
+    code, .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                   "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    /* ------------------------------------------------------------------
+       HEADER / ABSTRACT
+       ------------------------------------------------------------------ */
+    header {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 44px 24px 28px;
+    }
+
+    .eyebrow {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.15;
+      max-width: 860px;
+    }
+
+    header .authors {
+      color: var(--ink-soft);
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    header .lede {
+      color: var(--ink-soft);
+      font-size: 16.5px;
+      max-width: 720px;
+      margin-top: 18px;
+    }
+
+    .header-meta {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .header-meta div {
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    .header-meta strong {
+      display: block;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    /* ------------------------------------------------------------------
+       STICKY TAB NAVIGATION
+       ------------------------------------------------------------------ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(248,248,246,0.94);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 16px;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-btn {
+      flex: 0 0 auto;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13.5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--ink-faint);
+      padding: 14px 12px 12px;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color .15s;
+    }
+
+    .nav-btn:hover { color: var(--ink); }
+
+    .nav-btn.active {
+      color: var(--teal);
+      border-bottom-color: var(--teal);
+    }
+
+    /* ------------------------------------------------------------------
+       MAIN PANELS (tab content)
+       Only the panel with .active is shown.
+       ------------------------------------------------------------------ */
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    .panel {
+      display: none;
+      animation: fadeIn .25s ease;
+    }
+
+    .panel.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-head {
+      margin-bottom: 24px;
+    }
+
+    .section-head h2 { font-size: 26px; }
+
+    .section-head p {
+      color: var(--ink-soft);
+      max-width: 700px;
+      margin-top: 8px;
+      font-size: 14.5px;
+    }
+
+    /* ------------------------------------------------------------------
+       TYPOGRAPHY HELPERS
+       ------------------------------------------------------------------ */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .tag.adipose { background: var(--adipose-soft); color: var(--adipose); border-color: transparent; }
+    .tag.liver   { background: var(--liver-soft);   color: var(--liver);   border-color: transparent; }
+    .tag.teal    { background: var(--teal-soft);    color: var(--teal);    border-color: transparent; }
+    .tag.flag    { background: var(--flag-soft);    color: var(--flag);    border-color: transparent; }
+
+    .locus {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 600;
+      font-size: 13px;
+      background: var(--ink);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* ------------------------------------------------------------------
+       STAT CARDS
+       ------------------------------------------------------------------ */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      padding: 18px 20px;
+    }
+
+    .stat-card .num {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+
+    .stat-card .label {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin-top: 8px;
+    }
+
+    /* ------------------------------------------------------------------
+       CARDS & CALLOUTS
+       ------------------------------------------------------------------ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 { font-size: 17px; margin-bottom: 10px; }
+    .card h4 {
+      font-size: 13px;
+      margin: 18px 0 8px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .card p { margin: 8px 0; color: var(--ink-soft); font-size: 14.5px; }
+    .card p strong, .card li strong { color: var(--ink); font-weight: 600; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 800px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .callout {
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      border: 1px solid transparent;
+    }
+
+    .callout strong {
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .callout.info    { background: var(--teal-soft); color: #0a4b48; border-color: #c3e0de; }
+    .callout.warning { background: var(--flag-soft); color: #6b4e0f; border-color: #e8d69f; }
+    .callout.success { background: #e8f5e9; color: #1b5e20; border-color: #c8e6c9; }
+    .callout.highlight { background: #f3e5f5; color: #4a148c; border-color: #e1bee7; }
+
+    /* ------------------------------------------------------------------
+       FIGURES
+       ------------------------------------------------------------------ */
+    figure {
+      margin: 22px 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    figure img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+      display: block;
+    }
+
+    figcaption {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    /* ------------------------------------------------------------------
+       BAR CHARTS (vanilla JS, no external library)
+       ------------------------------------------------------------------ */
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .bar-row:last-child { border-bottom: none; }
+
+    .bar-label {
+      width: 150px;
+      flex-shrink: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+    }
+
+    .bar-track {
+      flex: 1;
+      background: #f0eee7;
+      border-radius: 4px;
+      height: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      min-width: 4%;
+      transition: width .4s ease;
+    }
+
+    .bar-fill span {
+      font-size: 11px;
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      padding-left: 8px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .bar-fill.adipose { background: var(--adipose); }
+    .bar-fill.liver   { background: var(--liver); }
+    .bar-fill.flagged {
+      background: repeating-linear-gradient(45deg, var(--flag), var(--flag) 6px,
+                                            #d9c179 6px, #d9c179 12px);
+    }
+
+    .bar-meta {
+      width: 130px;
+      flex-shrink: 0;
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-align: right;
+    }
+
+    /* ------------------------------------------------------------------
+       CORRELATION MINI-BARS
+       ------------------------------------------------------------------ */
+    .corr-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+    }
+
+    .corr-name {
+      width: 110px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .corr-track {
+      flex: 1;
+      height: 8px;
+      background: #f0eee7;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .corr-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--teal);
+      transition: width .4s ease;
+    }
+
+    .corr-val {
+      width: 64px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-align: right;
+    }
+
+    /* ------------------------------------------------------------------
+       TABLES (sortable)
+       ------------------------------------------------------------------ */
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 4px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    th {
+      text-align: left;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-faint);
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    th:hover { color: var(--ink); }
+
+    th::after {
+      content: " ↕";
+      opacity: .4;
+      font-size: 10px;
+    }
+
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink-soft);
+    }
+
+    td.gene {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: #fafafa; }
+
+    /* ------------------------------------------------------------------
+       EXPANDABLE OBJECTIVE CARDS
+       ------------------------------------------------------------------ */
+    .objective-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 14px;
+    }
+
+    .objective-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .objective-card summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      list-style: none;
+    }
+
+    .objective-card summary::-webkit-details-marker { display: none; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .obj-body { margin-top: 12px; font-size: 14px; color: var(--ink-soft); }
+    .obj-body p { margin: 8px 0; }
+    .obj-body strong { color: var(--ink); }
+
+    /* ------------------------------------------------------------------
+       GENE CARDS
+       ------------------------------------------------------------------ */
+    .gene-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .gene-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .gene-card .gname {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .gene-card .role {
+      font-size: 11.5px;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 4px 0 10px;
+    }
+
+    .gene-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+
+    .status {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 11.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+
+    .status.established { background: var(--teal-soft); color: var(--teal); }
+    .status.novel       { background: var(--flag-soft); color: var(--flag); }
+    .status.open        { background: #f0eee7; color: var(--ink-soft); }
+
+    /* ------------------------------------------------------------------
+       METHOD STEPS
+       ------------------------------------------------------------------ */
+    .step-list {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .step-list li {
+      counter-increment: step;
+      position: relative;
+      padding: 14px 0 14px 44px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--ink-soft);
+    }
+
+    .step-list li:last-child { border-bottom: none; }
+
+    .step-list li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-list li strong { color: var(--ink); }
+
+    /* ------------------------------------------------------------------
+       GALLERY GRID
+       ------------------------------------------------------------------ */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 14px 0 28px;
+    }
+
+    .gallery-item {
+      display: block;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--shadow);
+      transition: transform .1s, border-color .15s;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-2px);
+      border-color: var(--teal);
+      text-decoration: none;
+    }
+
+    .gallery-item .thumb-title {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .gallery-item .thumb-desc {
+      font-size: 12px;
+      color: var(--ink-faint);
+    }
+
+    /* ------------------------------------------------------------------
+       FOOTER & REFERENCES
+       ------------------------------------------------------------------ */
+    footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      color: var(--ink-faint);
+      font-size: 12.5px;
+      border-top: 1px solid var(--line);
+    }
+
+    .refs { padding-left: 18px; }
+    .refs li { margin-bottom: 6px; }
+
+    /* ------------------------------------------------------------------
+       SMALL UTILITIES
+       ------------------------------------------------------------------ */
+    .muted { color: var(--ink-soft); }
+    .small { font-size: 12.5px; }
+    .gene-lookup {
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .gene-lookup a {
+      display: inline-block;
+      margin-right: 8px;
+      color: var(--teal);
+      text-decoration: none;
+    }
+    .gene-lookup a:hover { text-decoration: underline; }
+
+    .download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      background: var(--teal-soft);
+      color: var(--teal);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .download:hover { background: #d0e7e5; text-decoration: none; }
   </style>
-  <link rel="stylesheet" href="progress_report_style.css" />
-  <!--[if lt IE 9]>
-  <![endif]-->
 </head>
+
 <body>
-<header id="title-block-header">
-<h1 class="title">Progress Report: LD-based trans eQTL bands and GO/KEGG
-enrichment in HS rat adipose and liver</h1>
-<p class="author">Felix Lisso</p>
-<p class="date">30 July 2026</p>
-</header>
-<nav id="TOC" role="doc-toc">
-<ul>
-<li><a href="#abstract" id="toc-abstract">Abstract</a></li>
-<li><a href="#introduction" id="toc-introduction">1.
-Introduction</a></li>
-<li><a href="#results" id="toc-results">2. Results</a>
-<ul>
-<li><a href="#dataset-and-eqtl-summary"
-id="toc-dataset-and-eqtl-summary">2.1 Dataset and eQTL summary</a></li>
-<li><a href="#ld-based-trans-band-catalogs"
-id="toc-ld-based-trans-band-catalogs">2.2 LD-based trans band
-catalogs</a></li>
-<li><a href="#visualising-the-band-catalogue"
-id="toc-visualising-the-band-catalogue">2.3 Visualising the band
-catalogue</a></li>
-<li><a href="#gokegg-enrichment-reveals-tissue-specific-biology"
-id="toc-gokegg-enrichment-reveals-tissue-specific-biology">2.4 GO/KEGG
-enrichment reveals tissue-specific biology</a></li>
-</ul></li>
-<li><a href="#discussion-and-next-steps"
-id="toc-discussion-and-next-steps">3. Discussion and next steps</a></li>
-<li><a href="#methods-brief" id="toc-methods-brief">4. Methods
-(brief)</a></li>
-<li><a href="#references" id="toc-references">References</a></li>
-</ul>
-</nav>
-<p><link rel="stylesheet" href="progress_report_style.css"></p>
-<h2 id="abstract">Abstract</h2>
-<p>Trans eQTL hotspots (trans bands) can reveal master regulators that
-influence many genes from a distal genomic location, but separating them
-from residual cis signals remains a central challenge in genetical
-genomics studies. We re-analyzed adipose and liver RNA-seq data from
-~411 Heterogeneous Stock NIH (HSNIH-Palmer) rats using a linkage
-disequilibrium (LD) based cis definition (r² ≥ 0.6) instead of the
-conventional fixed 1 Mb window. The LD-aware classification removed
-1,442 adipose and 900 liver false-trans peaks while leaving the major
-trans-band hotspots intact. For functional interpretation, we generated
-a conservative, well-annotated gene universe by filtering raw GEMMA
-results to <strong>4 ≤ -log₁₀ P ≤ 80</strong> and removing poorly
-annotated genes (LOC, Riken, pseudogenes, uncharacterised). This yielded
-<strong>6,540 adipose, 3,790 liver, and 8,349 combined</strong>
-background genes. GO/KEGG over-representation analysis with g:Profiler2
-(GO BP, GO CC, GO MF and KEGG only) showed coherent tissue biology:
-adipose hotspots converged on RNA/nucleic-acid metabolism and chromatin
-organization, whereas liver hotspots pointed to sterol/steroid
-metabolism. <strong>No GO/KEGG terms were shared between the two
-tissues</strong>, arguing for largely tissue-specific trans regulation.
-These results validate the trans-band catalog as biologically meaningful
-and confirm the priority regions, adipose Chr5:68–70 Mb and liver
-Chr4:177–179 Mb, for the next pan-genomic structural-variant re-mapping
-step.</p>
-<hr />
-<h2 id="introduction">1. Introduction</h2>
-<p>Expression quantitative trait locus (eQTL) mapping links genetic
-variation to gene expression. Cis eQTLs, where the regulatory variant
-lies near the target gene, are abundant and well characterized, whereas
-trans eQTLs act from distal locations and can reveal master regulators
-and gene networks that influence many transcripts simultaneously.
-Clusters of trans eQTLs that map to the same genomic region are commonly
-called <strong>trans eQTL bands</strong> or <strong>trans eQTL
-hotspots</strong> (Breitling et al., 2008; Mozhui et al., 2008).</p>
-<p>A major difficulty in trans eQTL analysis is separating true distal
-regulation from technical and analytical artifacts. Sequence mismatch,
-reference bias, poorly annotated transcripts, and arbitrary cis windows
-can all produce spurious distal signals (Alberts et al., 2007; Peirce et
-al., 2006). In particular, a fixed 1–2 Mb cis window may over- or
-under-call cis eQTLs depending on local recombination and LD structure.
-Here we define cis intervals directly from the HS rat genotype data: for
-each peak marker we compute LD with all markers within 5 Mb and define
-the cis region as the contiguous interval where r² ≥ 0.6 with the lead
-marker. This gives each peak a data-driven, locally adaptive cis
-interval.</p>
-<p>Pan-genomic re-mapping, including structural variants (SVs), is
-expected to refine the causal variants behind these hotspots (Garrison
-et al., 2024). Before that step, however, it is important to establish
-that the called trans bands are biologically interpretable rather than
-random noise. We therefore performed GO/KEGG over-representation
-analysis on the trans-band gene sets (Kolberg et al., 2023), using a
-conservative universe of well-annotated genes that pass the same
-discovery threshold as the trans bands.</p>
-<hr />
-<h2 id="results">2. Results</h2>
-<h3 id="dataset-and-eqtl-summary">2.1 Dataset and eQTL summary</h3>
-<p>We analyzed adipose and liver RNA-seq data from the HSNIH-Palmer rat
-population (N ≈ 411), mapped to the mRatBN7.2 (rn7) reference genome
-with GEMMA via GeneNetwork 2 (Zhou &amp; Stephens, 2012). After the
-upper -logP cut (≤ 80) and the rough well-annotated filter, 21,128
-transcripts remained; the stricter universe filter (4 ≤ -logP ≤ 80,
-well-annotated, Ensembl gene IDs) retained <strong>6,540 adipose and
-3,790 liver genes</strong> (8,349 in the union).</p>
-<p>The LD-based Peirce-style cis–trans overview plots in <strong>Figure
-1</strong> show the classic diagonal cis pattern and the most prominent
-horizontal trans bands. In adipose the strongest trans band is on
-chromosome 5 near 68–70 Mb; in liver, a prominent band appears on
-chromosome 4 near 177–179 Mb.</p>
-<figure id="fig-peirce">
-<div class="two-col">
-<img src="peirce_cis_trans_ld_adipose.png" alt="Adipose LD-based Peirce plot" />
-<img src="peirce_cis_trans_ld_liver.png" alt="Liver LD-based Peirce plot" />
-</div>
-<figcaption>
-<strong>Figure 1.</strong> LD-based Peirce-style cis–trans overview
-plots (r² ≥ 0.6). <strong>Top panels:</strong> histograms of trans-eQTL
-peaks in 2 Mb bins across the genome (log scale). <strong>Bottom
-panels:</strong> scatter of gene position against strongest peak
-position; the diagonal is cis, off-diagonal horizontal bands are trans
-hotspots.
-</figcaption>
-</figure>
-<p>Replacing the fixed 1 Mb cis window with the LD-based definition (r²
-≥ 0.6) reduced cis calls by roughly half because the true LD block
-around many peak markers is smaller than 1 Mb (Table 1). The major trans
-bands remained robust, which increases confidence that they are real
-biological signals rather than artifacts of the cis window.</p>
-<p><strong>Table 1. Cis and trans counts with fixed 1 Mb versus LD-based
-cis definitions for peaks with 4 ≤ -log₁₀ P ≤ 80.</strong></p>
-<table>
-<colgroup>
-<col style="width: 8%" />
-<col style="width: 17%" />
-<col style="width: 20%" />
-<col style="width: 35%" />
-<col style="width: 17%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Tissue</th>
-<th style="text-align: right;">Fixed 1 Mb cis</th>
-<th style="text-align: right;">Fixed 1 Mb trans</th>
-<th style="text-align: right;">LD-based cis (r² ≥ 0.6)</th>
-<th style="text-align: right;">LD-based trans</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">2,740 (26.3%)</td>
-<td style="text-align: right;">7,670 (73.7%)</td>
-<td style="text-align: right;">1,298 (12.5%)</td>
-<td style="text-align: right;">9,112 (87.5%)</td>
-</tr>
-<tr class="even">
-<td>Liver</td>
-<td style="text-align: right;">1,791 (30.9%)</td>
-<td style="text-align: right;">4,006 (69.1%)</td>
-<td style="text-align: right;">891 (15.4%)</td>
-<td style="text-align: right;">4,906 (84.6%)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="ld-based-trans-band-catalogs">2.2 LD-based trans band
-catalogs</h3>
-<p>Trans bands were called by sliding a 2 Mb window across the genome
-and counting trans eQTL peaks per window, with a 10 Mb exclusion zone
-and a minimum of three peaks. Using the LD-based trans set, we
-identified <strong>136 adipose and 123 liver trans bands at -log₁₀ P ≥
-4</strong> (Table 2). For the GO/KEGG re-run, all bands were retained
-(FDR threshold = 1.00) so that we could assess which bands produced any
-coherent biological signal.</p>
-<p><strong>Table 2. LD-based trans band catalogs and GO/KEGG enrichment
-yield.</strong></p>
-<table>
-<colgroup>
-<col style="width: 8%" />
-<col style="width: 25%" />
-<col style="width: 43%" />
-<col style="width: 22%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Tissue</th>
-<th style="text-align: right;">LD-based trans bands</th>
-<th style="text-align: right;">Bands with ≥ 1 significant GO/KEGG
-term</th>
-<th style="text-align: right;">Min FDR in catalog</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">136</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">0.136</td>
-</tr>
-<tr class="even">
-<td>Liver</td>
-<td style="text-align: right;">123</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0.246</td>
-</tr>
-</tbody>
-</table>
-<p>The lower enrichment yield in liver reflects the smaller number of
-liver peaks and the stricter universe filter, but the liver bands that
-do enrich are highly tissue specific (Section 2.3). Table 3 lists the
-enriched bands.</p>
-<p><strong>Table 3. Trans bands with at least one significant GO/KEGG
-term.</strong></p>
-<table>
-<colgroup>
-<col style="width: 6%" />
-<col style="width: 20%" />
-<col style="width: 5%" />
-<col style="width: 16%" />
-<col style="width: 21%" />
-<col style="width: 9%" />
-<col style="width: 20%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Tissue</th>
-<th style="text-align: right;">Band (chr:start–end Mb)</th>
-<th style="text-align: right;">Peaks</th>
-<th style="text-align: right;">Max -log₁₀ P</th>
-<th style="text-align: right;">Significant GO/KEGG terms</th>
-<th style="text-align: right;">Best p-adj</th>
-<th>Top term</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">5:68–70</td>
-<td style="text-align: right;">619</td>
-<td style="text-align: right;">8.0</td>
-<td style="text-align: right;">115</td>
-<td style="text-align: right;">4.3 × 10⁻⁴⁶</td>
-<td>Nucleic acid metabolic process</td>
-</tr>
-<tr class="even">
-<td>Adipose</td>
-<td style="text-align: right;">5:119–121</td>
-<td style="text-align: right;">106</td>
-<td style="text-align: right;">7.9</td>
-<td style="text-align: right;">12</td>
-<td style="text-align: right;">1.9 × 10⁻⁴</td>
-<td>Collagen fibril organization</td>
-</tr>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">6:100–102</td>
-<td style="text-align: right;">59</td>
-<td style="text-align: right;">7.8</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">8.1 × 10⁻⁸</td>
-<td>Extracellular region</td>
-</tr>
-<tr class="even">
-<td>Adipose</td>
-<td style="text-align: right;">12:43.5–45.5</td>
-<td style="text-align: right;">306</td>
-<td style="text-align: right;">37.4</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">6.7 × 10⁻⁵</td>
-<td>Organelle membrane</td>
-</tr>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">2:188.5–190.5</td>
-<td style="text-align: right;">164</td>
-<td style="text-align: right;">9.3</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">5.2 × 10⁻⁵</td>
-<td>Protein processing in endoplasmic reticulum</td>
-</tr>
-<tr class="even">
-<td>Adipose</td>
-<td style="text-align: right;">6:71.5–73.5</td>
-<td style="text-align: right;">19</td>
-<td style="text-align: right;">47.1</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">5.0 × 10⁻⁴</td>
-<td>Pre-mRNA 5’-splice site binding</td>
-</tr>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">14:10–12</td>
-<td style="text-align: right;">75</td>
-<td style="text-align: right;">10.6</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1.3 × 10⁻⁷</td>
-<td>Ribosome biogenesis</td>
-</tr>
-<tr class="even">
-<td>Adipose</td>
-<td style="text-align: right;">4:7–9</td>
-<td style="text-align: right;">51</td>
-<td style="text-align: right;">7.4</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">2.5 × 10⁻²</td>
-<td>RNA biosynthetic process</td>
-</tr>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">19:47.5–49.5</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">5.4</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1.4 × 10⁻²</td>
-<td>RNA processing</td>
-</tr>
-<tr class="even">
-<td>Adipose</td>
-<td style="text-align: right;">10:98–100</td>
-<td style="text-align: right;">74</td>
-<td style="text-align: right;">65.2</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">4.4 × 10⁻³</td>
-<td>Mitochondrion</td>
-</tr>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">13:86.5–88.5</td>
-<td style="text-align: right;">15</td>
-<td style="text-align: right;">65.8</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">5.6 × 10⁻⁸</td>
-<td>Olfactory receptor activity</td>
-</tr>
-<tr class="even">
-<td>Liver</td>
-<td style="text-align: right;">4:177–179</td>
-<td style="text-align: right;">147</td>
-<td style="text-align: right;">9.6</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1.5 × 10⁻²</td>
-<td>Steroid biosynthesis</td>
-</tr>
-<tr class="odd">
-<td>Liver</td>
-<td style="text-align: right;">8:118–120</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">9.1</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1.0 × 10⁻²</td>
-<td>Attachment of spindle microtubules to kinetochore</td>
-</tr>
-</tbody>
-</table>
-<h3 id="visualising-the-band-catalogue">2.3 Visualising the band
-catalogue</h3>
-<p>The trans-band Manhattan plots in <strong>Figure 2</strong> place
-every trans-eQTL peak on the genome, with the LD-based logP4 bands
-highlighted as gold intervals. The two priority hotspots for follow-up
-are the adipose Chr5:68–70 Mb band and the liver Chr4:177–179 Mb band.
-The interactive HTML versions below the static figure allow zooming and
-panning.</p>
-<figure id="fig-manhattan">
-<div class="two-col">
-<img src="transband_manhattan_adipose_large.png" alt="Adipose trans-band Manhattan" />
-<img src="transband_manhattan_liver_large.png" alt="Liver trans-band Manhattan" />
-</div>
-<figcaption>
-<strong>Figure 2.</strong> Trans-eQTL Manhattan plots (larger static
-version). Each point is a trans-eQTL peak; points falling inside the
-LD-based logP4 bands are shown in black and the band intervals are
-shaded in gold. Use the interactive plots below to zoom and explore
-details.
-</figcaption>
-</figure>
-<div class="interactive">
-<h4>
-Interactive Manhattan plots
-</h4>
-<div class="two-col">
-<iframe src="transband_manhattan_adipose.html" width="100%" height="650px" frameborder="0"></iframe>
-<iframe src="transband_manhattan_liver.html" width="100%" height="650px" frameborder="0"></iframe>
-</div>
-<p class="caption">
-Interactive zoomable versions of Figure 2. Hover over points for gene
-and peak information; use the plot toolbar to zoom, pan, or save a PNG.
-</p>
-</div>
-<p><strong>Figure 3</strong> zooms into the two priority regions. Points
-are coloured by the chromosome of the target gene (the gene-of-origin),
-illustrating that the bands receive input from many chromosomes, as
-expected for true trans regulation.</p>
-<figure id="fig-locuszoom">
-<div class="two-col">
-<img src="locuszoom_adipose_chr5_68-70_large.png" alt="Adipose Chr5:68-70 Mb" />
-<img src="locuszoom_liver_chr4_177-179_large.png" alt="Liver Chr4:177-179 Mb" />
-</div>
-<figcaption>
-<strong>Figure 3.</strong> LocusZoom-style views of the two priority
-trans bands (larger static version). The gold interval is the called
-LD-based band; points are trans peaks within a ±5 Mb window and are
-coloured by the chromosome of the regulated gene.
-</figcaption>
-</figure>
-<div class="interactive">
-<h4>
-Interactive LocusZoom plots
-</h4>
-<div class="two-col">
-<iframe src="locuszoom_adipose_chr5_68-70.html" width="100%" height="600px" frameborder="0"></iframe>
-<iframe src="locuszoom_liver_chr4_177-179.html" width="100%" height="600px" frameborder="0"></iframe>
-</div>
-<p class="caption">
-Interactive zoomable versions of Figure 3. Hover for gene details, zoom
-into the band region, and pan along the chromosome.
-</p>
-</div>
-<h3 id="gokegg-enrichment-reveals-tissue-specific-biology">2.4 GO/KEGG
-enrichment reveals tissue-specific biology</h3>
-<p>We ran over-representation analysis with gprofiler2 against
-<strong>GO Biological Process, GO Cellular Component, GO Molecular
-Function and KEGG</strong> for <em>Rattus norvegicus</em>. The
-background universe was built from the same raw GEMMA tables after
-applying the 4 ≤ -log₁₀ P ≤ 80 and well-annotated filters. Terms with
-adjusted p &lt; 0.05 were retained.</p>
-<p><strong>Table 4. Number of significant GO/KEGG terms by annotation
-source.</strong></p>
-<table>
-<thead>
-<tr class="header">
-<th>Tissue</th>
-<th style="text-align: right;">GO BP</th>
-<th style="text-align: right;">GO CC</th>
-<th style="text-align: right;">GO MF</th>
-<th style="text-align: right;">KEGG</th>
-<th style="text-align: right;">Total</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Adipose</td>
-<td style="text-align: right;">77</td>
-<td style="text-align: right;">43</td>
-<td style="text-align: right;">33</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">160</td>
-</tr>
-<tr class="even">
-<td>Liver</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">7</td>
-</tr>
-</tbody>
-</table>
-<p>No GO/KEGG terms were shared between adipose and liver; all 167
-significant terms were tissue specific. This argues against a generic
-housekeeping signal and supports tissue-specific trans regulation.</p>
-<p><strong>Figure 4</strong> shows the overlap of target genes across
-the six largest trans bands (four adipose, two liver). Most gene sharing
-is within adipose bands; the two liver bands share only a handful of
-genes with adipose, reinforcing tissue specificity.</p>
-<figure id="fig-upset">
-<img src="upset_top_bands.png" alt="UpSet plot of target gene overlap across the largest trans bands" />
-<figcaption>
-<strong>Figure 4.</strong> UpSet plot of target-gene overlap across the
-six largest trans bands. Horizontal bars on the left show the number of
-genes in each band; vertical bars show the size of each intersection.
-</figcaption>
-</figure>
-<p>The band-by-term heatmap in <strong>Figure 5</strong> clusters terms
-and bands by shared enrichment. Three main neighbourhoods emerge:
-RNA/chromatin/transcription (driven by adipose Chr5:68–70),
-extracellular-matrix/ER (adipose Chr5:119–121, Chr2:188.5–190.5), and
-lipid/sterol metabolism (liver Chr4:177–179).</p>
-<figure id="fig-heatmap">
-<img src="band_term_heatmap.png" alt="Band × term heatmap" />
-<figcaption>
-<strong>Figure 5.</strong> Clustered heatmap of significant GO/KEGG
-terms across enriched trans bands. Colour intensity is -log₁₀ adjusted
-p-value (capped at 50).
-</figcaption>
-</figure>
-<p><strong>Figure 6</strong> highlights the dominant adipose signature.
-The strongest adipose signal is driven by the large Chr5:68–70 Mb
-hotspot and is dominated by RNA and nucleic acid metabolism,
-gene-expression regulation, nucleus/chromatin localization, and
-nucleic-acid binding. The top term, <em>nucleic acid metabolic
-process</em>, contains 257 genes from this band with an adjusted p ≈ 4 ×
-10⁻⁴⁶. These findings suggest that the major adipose trans hotspot
-regulates core gene-expression machinery. Other adipose bands point to
-collagen/extracellular matrix (Chr5:119–121), ribosome biogenesis
-(Chr14:10–12), ER/protein processing (Chr2:188.5–190.5), and olfactory
-receptor activity (Chr13:86.5–88.5).</p>
-<figure id="fig-topterms-adipose">
-<img src="enrichment_gokegg/top_terms_adipose_gokegg.png" alt="Top GO/KEGG terms in adipose trans bands" />
-<figcaption>
-<strong>Figure 6.</strong> Top GO/KEGG terms per annotation source in
-adipose trans bands. RNA and nucleic acid metabolism, transcriptional
-regulation and chromatin-related terms dominate.
-</figcaption>
-</figure>
-<p>With the stricter universe filter, only two liver bands produced
-significant GO/KEGG terms (<strong>Figure 7</strong>). Liver
-Chr4:177–179 Mb is enriched for <strong>Steroid biosynthesis</strong>
-(KEGG), while liver Chr8:118–120 Mb is enriched for <strong>attachment
-of spindle microtubules to kinetochore</strong> (GO BP). The
-lipid/sterol theme is consistent with liver metabolic function, but the
-limited number of enriched liver bands reflects both the smaller liver
-peak set and the conservative universe filter.</p>
-<figure id="fig-topterms-liver">
-<img src="enrichment_gokegg/top_terms_liver_gokegg.png" alt="Top GO/KEGG terms in liver trans bands" />
-<figcaption>
-<strong>Figure 7.</strong> Top GO/KEGG terms per annotation source in
-liver trans bands. Steroid biosynthesis and the kinetochore/spindle
-checkpoint are the only significant signals in this restricted GO/KEGG
-run.
-</figcaption>
-</figure>
-<p><strong>Figure 8</strong> summarises the pathway comparison between
-tissues. Adipose contributes the majority of terms, especially in GO
-BP/CC/MF; liver contributes KEGG metabolic and immune-related terms, and
-no GO/KEGG term is shared.</p>
-<figure id="fig-overlap">
-<img src="enrichment_gokegg/pathway_overlap_tissues_gokegg.png" alt="Pathway overlap between adipose and liver trans bands" />
-<figcaption>
-<strong>Figure 8.</strong> GO/KEGG pathway overlap between adipose and
-liver trans bands. Adipose contributes most terms; no terms are shared
-between tissues in this GO/KEGG-only analysis.
-</figcaption>
-</figure>
-<hr />
-<h2 id="discussion-and-next-steps">3. Discussion and next steps</h2>
-<p>The GO/KEGG-only enrichment results demonstrate that the LD-based
-trans bands are biologically interpretable, even under a very
-conservative universe filter. Adipose trans hotspots converge on
-RNA/nucleic-acid metabolism and chromatin organization, with the
-Chr5:68–70 Mb band acting as the dominant hub. Liver hotspots, by
-contrast, point to steroid/sterol metabolism. The complete absence of
-shared GO/KEGG terms between tissues argues that these are genuine
-tissue-specific regulatory signals rather than generic artifacts.</p>
-<p>These findings justify the next phase of the project: pan-genomic
-re-mapping with structural variants. SV-aware genotyping is expected to
-(i) refine the causal haplotypes within the priority hotspots, (ii)
-capture variation missed by the current SNP-only panel, and (iii) help
-explain tissue specificity if the same SV has different regulatory
-consequences in adipose and liver. The driver genes identified here,
-transcriptional/chromatin regulators in adipose and cholesterol/steroid
-biosynthesis enzymes in liver, provide focused candidate mediators for
-colocalization and experimental follow-up.</p>
-<p>Immediate next steps are:</p>
-<ol type="1">
-<li>Generate pan-genomic variant calls (SNPs, indels and SVs) for the HS
-rat cohort.</li>
-<li>Re-map cis and trans eQTLs with the expanded variant set and the
-same LD-based cis definition.</li>
-<li>Fine-map the priority hotspots: adipose Chr5:68–70 Mb and liver
-Chr4:177–179 Mb.</li>
-<li>Test whether SVs explain trans eQTL associations better than the
-current SNP-only models.</li>
-<li>Validate top driver genes using allele-specific expression, CRISPR
-or targeted assays where possible.</li>
-</ol>
-<hr />
-<h2 id="methods-brief">4. Methods (brief)</h2>
-<p><strong>LD-based cis and trans classification.</strong> For each eQTL
-peak, the nearest genotyped marker was identified and r² was computed
-with all markers within 5 Mb. The cis interval was defined as the
-contiguous region where r² ≥ 0.6 with the lead marker. A gene was
-classified as cis if it fell within this interval; otherwise the peak
-was trans.</p>
-<p><strong>Trans band detection.</strong> Trans bands were identified by
-sliding a 2 Mb window in 0.5 Mb steps across the genome, counting trans
-eQTL peaks per window, and applying a 10 Mb exclusion zone. Bands
-required at least three peaks.</p>
-<p><strong>Universe filter.</strong> For the enrichment background, raw
-GEMMA tables were filtered to well-annotated genes with 4 ≤ -log₁₀ P ≤
-80. This yielded 6,540 adipose, 3,790 liver and 8,349 combined genes.
-Poorly annotated genes (LOC, Riken, pseudogenes, uncharacterised) were
-removed using the same rules as the main Python pipeline.</p>
-<p><strong>Functional enrichment.</strong> Over-representation analysis
-was performed with gprofiler2 (organism <em>rnorvegicus</em>) against GO
-BP/CC/MF and KEGG only. A custom background (custom_annotated) was
-supplied for each tissue. Adjusted p &lt; 0.05 was considered
-significant.</p>
-<p><strong>Visualisation.</strong> Peirce-style cis–trans and Manhattan
-plots were generated with custom Python scripts using matplotlib;
-LocusZoom, heatmap and UpSet plots were generated with Python/R
-(matplotlib, seaborn, UpSetR); GO/KEGG summary plots were generated with
-R/ggplot2. Interactive Manhattan and LocusZoom plots were produced with
-Plotly. All figures are available in <code>reports/</code>.</p>
-<hr />
-<h2 id="references">References</h2>
-<ol type="1">
-<li>Alberts, R., Terpstra, P., Li, Y., et al. (2007). Sequence
-polymorphisms cause many false cis eQTLs. <em>PLoS ONE</em>, 2(7),
-e622.</li>
-<li>Ashburner, M., Ball, C.A., Blake, J.A., et al. (2000). Gene
-Ontology: tool for the unification of biology. <em>Nature Genetics</em>,
-25(1), 25–29.</li>
-<li>Breitling, R., Li, Y., Tesson, B.M., et al. (2008). Genetical
-genomics: spotlight on QTL hotspots. <em>PLoS Genetics</em>, 4(10),
-e1000232.</li>
-<li>Garrison, E., Guarracino, A., Heumos, S., et al. (2024). Building
-pangenome graphs. <em>Nature Methods</em>, 21(11), 2008–2012.</li>
-<li>Kanehisa, M., &amp; Goto, S. (2000). KEGG: kyoto encyclopedia of
-genes and genomes. <em>Nucleic Acids Research</em>, 28(1), 27–30.</li>
-<li>Kolberg, L., Raudvere, U., Kuzmin, I., et al. (2023). g:Profiler
-interoperable web service for functional profiling. <em>Nucleic Acids
-Research</em>, 51(W1), W207–W212.</li>
-<li>Mozhui, K., Ciobanu, D.C., Schikorski, T., et al. (2008). Dissection
-of a QTL hotspot on mouse distal chromosome 1. <em>PLoS Genetics</em>,
-4(11), e1000260.</li>
-<li>Peirce, J.L., Li, H., Wang, J., et al. (2006). How replicable are
-mRNA expression QTL? <em>Mammalian Genome</em>, 17, 643–656.</li>
-<li>Tran, T.H., Crouse, W.L., Keele, G.R., et al. (2023). Genetic
-mapping of multiple traits identifies novel genes for adiposity, lipids,
-and insulin secretory capacity in outbred rats. <em>Diabetes</em>,
-72(1), 135–148.</li>
-<li>Zhou, X., &amp; Stephens, M. (2012). Genome-wide efficient
-mixed-model analysis for association studies. <em>Nature Genetics</em>,
-44(7), 821–824.</li>
-</ol>
+
+  <!-- ================================================================
+       HEADER
+       ================================================================ -->
+  <header>
+    <div class="eyebrow">HS Rat Genetical Genomics — Interactive Summary</div>
+    <h1>Statistically validated trans-eQTL hotspots in HS rat adipose and liver nominate candidate master regulators of metabolic gene networks</h1>
+    <p class="authors">Felix Lisso<sup>1</sup>, Pjotr Prins<sup>1,2</sup>, Rob Williams<sup>2</sup> &nbsp;|&nbsp; <sup>1</sup>Pwani University &nbsp; <sup>2</sup>UTHSC &nbsp;|&nbsp; August 2026</p>
+    <p class="lede">
+      An interactive catalog of cis/trans eQTL classification, trans-band discovery,
+      candidate driver validation, and pangenome follow-up targets in ~436 Heterogeneous
+      Stock rats.
+    </p>
+
+    <div class="header-meta">
+      <div><strong>2 tissues</strong>Adipose &amp; Liver</div>
+      <div><strong>33,654</strong>peaks per tissue (step 2)</div>
+      <div><strong>20,647</strong>well-annotated peaks (step 3)</div>
+      <div><strong>14,163</strong>genotyped markers</div>
+      <div><strong>26</strong>candidate hotspots (13 + 13)</div>
+    </div>
+  </header>
+
+  <!-- ================================================================
+       TAB NAVIGATION
+       ================================================================ -->
+  <nav aria-label="Report sections">
+    <div class="nav-inner" id="navInner">
+      <!-- Buttons are injected by JS from the TABS array -->
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ================================================================
+         PANEL: ABSTRACT
+         ================================================================ -->
+    <section class="panel active" id="panel-abstract" aria-labelledby="tab-abstract">
+      <div class="section-head">
+        <h2>Abstract</h2>
+        <p>Study summary — background, methods, results and conclusion.</p>
+      </div>
+
+      <div class="card">
+        <p><strong>Background:</strong> Trans-eQTL hotspots influence the expression of many distal genes and offer a route to master regulators of complex traits, but they are prone to artifacts: uneven marker density inflating false hotspot calls, cis-effects miscategorized as trans, and co-expression confounds masquerading as coordinated regulation. We mapped cis- and trans-eQTLs in adipose and liver from 436 outbred Heterogeneous Stock (HS) rats to identify and validate candidate trans-regulatory hotspots.</p>
+
+        <p><strong>Methods:</strong> Cis/trans classification used genotype-derived linkage disequilibrium (r<sup>2</sup> ≥ 0.6), with an explicit exclusion zone to prevent self-hit leakage. Hotspots were called via marker-density-weighted permutation testing (5,000 permutations) on well-annotated, significant (−log<sub>10</sub> <em>P</em> ≥ 5.5) trans peaks. Each candidate hotspot was validated by testing whether its target genes’ dominant co-expression axis (PC1) correlated with a local candidate driver’s own expression.</p>
+
+        <p><strong>Results:</strong> Thirteen candidate hotspots were identified per tissue; five in adipose and one in liver met stringent gene-count and coherence thresholds. The strongest adipose hotspot (<span class="locus">Chr5:68–72 Mb</span>, ~73–74 genes, 2.7-fold coherence enrichment over random) is anchored by <em>Tmem245</em> (r = 0.81 with the module’s dominant axis) and regulates <em>Plag1</em>, a cross-species pleiotropic regulator of body size and metabolic traits, and <em>Bmal1</em>, the core circadian clock gene. In liver, a single dominant hotspot (<span class="locus">Chr4:176–184 Mb</span>, 55 genes) precisely reproduces the mevalonate/cholesterol biosynthesis regulon (<em>Cyp51, Hmgcs1, Sqle, Fdps, Fdft1</em>); notably, neither known master regulator (<em>Srebf1, Srebf2</em>) resides at this locus, leaving its causal driver unresolved by current annotation.</p>
+
+        <p><strong>Conclusion:</strong> This tissue-specific hotspot catalog provides an artifact-resistant discovery template and a prioritized target list — adipose <span class="locus">Chr5:68–72 Mb</span> and liver <span class="locus">Chr4:176–184 Mb</span> — for pangenome-based structural variant fine-mapping to resolve causal drivers not explained by conventional gene-centric annotations.</p>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: OVERVIEW
+         ================================================================ -->
+    <section class="panel" id="panel-overview" aria-labelledby="tab-overview">
+      <div class="section-head">
+        <h2>Overview</h2>
+        <p>Headline numbers and the two strongest hotspots.</p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num">1,463 / 32,191</div><div class="label">Adipose cis / trans peaks (LD r²≥0.6)</div></div>
+        <div class="stat-card"><div class="num">1,058 / 32,596</div><div class="label">Liver cis / trans peaks (LD r²≥0.6)</div></div>
+        <div class="stat-card"><div class="num">~73–74 genes</div><div class="label">Top adipose band, Chr5:68–72 Mb</div></div>
+        <div class="stat-card"><div class="num">55 genes</div><div class="label">Top liver band, Chr4:176–184 Mb</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <span class="tag adipose">Adipose</span>
+          <h3 style="margin-top:12px;">A candidate circadian–metabolic hub</h3>
+          <p><span class="locus">Chr5:68–72 Mb</span> regulates a large, coherent module. The local gene <em>Tmem245</em> tracks the module’s first principal component with r = 0.81, and downstream targets include <em>Plag1</em> (body-size/metabolism regulator) and <em>Bmal1</em> (circadian clock). Purity checks for self-hit leakage, method disagreement and weak LD support were all clean.</p>
+          <div id="adipose-driver-corr"></div>
+            <h4 style="margin-top:18px;">Top target genes in Chr5:68–72 Mb</h4>
+            <div class="table-wrap" style="margin-top:8px;">
+              <table style="font-size:12.5px;">
+                <thead><tr><th>Gene</th><th>Role / description</th><th>−logP</th></tr></thead>
+                <tbody>
+                  <tr><td class="gene">Spats1</td><td>spermatogenesis associated, serine-rich 1</td><td>8.0</td></tr>
+                  <tr><td class="gene">Elp4</td><td>elongator acetyltransferase complex subunit 4</td><td>7.6</td></tr>
+                  <tr><td class="gene">Pou2f1</td><td>POU class 2 homeobox 1</td><td>7.3</td></tr>
+                  <tr><td class="gene">Plag1</td><td>PLAG1 zinc finger</td><td>7.1</td></tr>
+                  <tr><td class="gene">Bmal1</td><td>basic helix-loop-helix ARNT like 1</td><td>7.0</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small muted" style="margin-top:10px;"><a href="supplementary/supplementary_gene_lists.html" target="_blank">Full adipose gene list →</a></p>
+          </div>
+
+        <div class="card">
+          <span class="tag liver">Liver</span>
+          <h3 style="margin-top:12px;">A textbook cholesterol regulon, missing driver</h3>
+          <p><span class="locus">Chr4:176–184 Mb</span> regulates 55 genes that are almost entirely the cholesterol/mevalonate biosynthesis pathway. Neither <em>Srebf1</em> nor <em>Srebf2</em> — the usual transcriptional masters of this pathway — sits nearby. This makes the locus a prime candidate for pangenome/SV fine-mapping.</p>
+          <table>
+            <thead><tr><th>Gene</th><th>Role</th><th>−logP</th></tr></thead>
+            <tbody>
+              <tr><td class="gene">Cyp51</td><td>Cytochrome P450, family 51</td><td>8.6</td></tr>
+              <tr><td class="gene">Hmgcs1</td><td>HMG-CoA synthase</td><td>8.5</td></tr>
+              <tr><td class="gene">Sqle</td><td>Squalene epoxidase</td><td>8.4</td></tr>
+              <tr><td class="gene">Fdps</td><td>Farnesyl diphosphate synthase</td><td>7.2</td></tr>
+              <tr><td class="gene">Fdft1</td><td>Farnesyl diphosphate transferase</td><td>7.0</td></tr>
+              <tr><td class="gene">Msmo1</td><td>Methylsterol monooxygenase</td><td>7.1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <strong>Why these findings are trustworthy</strong>
+        Every reported band passed a three-part check: (1) marker-density-weighted permutation testing (5,000 shuffles), (2) a 10 Mb self-hit exclusion zone, and (3) a co-expression check requiring the candidate driver’s own expression to explain the module’s shared signal.
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: OBJECTIVES
+         ================================================================ -->
+    <section class="panel" id="panel-objectives" aria-labelledby="tab-objectives">
+      <div class="section-head">
+        <h2>Objectives &amp; analysis logic</h2>
+        <p>Five connected questions, the methods that answer them, and the key results. Click any objective to expand.</p>
+      </div>
+
+      <div class="callout info">
+        <strong>Filtering chain used throughout</strong>
+        <ol>
+          <li><strong>Step 1</strong> classifies every peak as cis or trans, keeping the full table.</li>
+          <li><strong>Step 2</strong> keeps only well-annotated genes (drops LOC/RIKEN/Gm/pseudogene/EST accessions).</li>
+          <li><strong>Step 3</strong> all downstream analyses operate on the well-annotated subset: trans-band detection uses <code>--well-annotated-only</code>, driver searches require a well-annotated local cis gene, and the GO/KEGG universe is built from the same well-annotated gene list.</li>
+        </ol>
+      </div>
+
+      <div class="objective-grid">
+        <details class="objective-card" open>
+          <summary><span class="badge">1</span> Separate local (cis) from distal (trans) regulation</summary>
+          <div class="obj-body">
+            <p><strong>Question:</strong> Which peaks act near the gene they regulate, and which act from afar?</p>
+            <p><strong>Method:</strong> LD-based cis interval (r² ≥ 0.6, ±5 Mb) using real genotype calls; a fixed 10 Mb window is kept as a sanity check.</p>
+            <p><strong>Result:</strong> Adipose 1,463 cis / 32,191 trans; Liver 1,058 cis / 32,596 trans.</p>
+          </div>
+        </details>
+
+        <details class="objective-card">
+          <summary><span class="badge">2</span> Discover trans-eQTL hotspots (trans-bands)</summary>
+          <div class="obj-body">
+            <p><strong>Question:</strong> Do trans peaks cluster more than expected by chance?</p>
+            <p><strong>Method:</strong> 4 Mb bins, marker-density permutation null, 10 Mb self-hit exclusion, adjacent bins merged.</p>
+            <p><strong>Result:</strong> 13 merged bands per tissue.</p>
+          </div>
+        </details>
+
+        <details class="objective-card">
+          <summary><span class="badge">3</span> Propose candidate driver genes</summary>
+          <div class="obj-body">
+            <p><strong>Question:</strong> Which gene inside a band could explain the distal signal?</p>
+            <p><strong>Method:</strong> Top local well-annotated cis gene by −logP, plus PC1 co-expression coherence.</p>
+            <p><strong>Result:</strong> Adipose top module driver <em>Tmem245</em> (r=0.81); liver strongest candidate <em>Rassf8</em> (−logP 19.5).</p>
+          </div>
+        </details>
+
+        <details class="objective-card">
+          <summary><span class="badge">4</span> Interpret bands biologically (GO/KEGG)</summary>
+          <div class="obj-body">
+            <p><strong>Question:</strong> Do band genes belong to coherent pathways?</p>
+            <p><strong>Method:</strong> g:Profiler over-representation against the same well-annotated gene universe.</p>
+            <p><strong>Result:</strong> Adipose Chr5:68–72 Mb is enriched for RNA/transcription regulation (14 terms). Liver Chr4:176–184 Mb points to steroid biosynthesis.</p>
+          </div>
+        </details>
+
+        <details class="objective-card">
+          <summary><span class="badge">5</span> Motivate pangenomics as the next step</summary>
+          <div class="obj-body">
+            <p><strong>Question:</strong> Could hidden structural or haplotypic variation explain bands SNP data cannot?</p>
+            <p><strong>Reasoning:</strong> LD intervals and drivers are conditioned on SNP genotypes. Missing SVs, indels and reference bias can create apparently trans hotspots.</p>
+            <p><strong>Next step:</strong> Build/borrow a rat pangenome, call SVs, re-QTL with graph-aware genotypes.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: CIS / TRANS
+         ================================================================ -->
+    <section class="panel" id="panel-cistrans" aria-labelledby="tab-cistrans">
+      <div class="section-head">
+        <h2>Cis vs. trans classification</h2>
+        <p>How every peak was labelled local or distal, and why the call is independent of statistical significance.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>The method: LD-based, not a flat window</h3>
+          <p>For each peak the lead marker is found and r² is measured against every marker within 5 Mb. The cis interval is the contiguous stretch where r² stays ≥ 0.6 — a data-driven boundary rather than an arbitrary cutoff. A fixed 10 Mb window is kept for comparison.</p>
+          <table>
+            <thead><tr><th>Method</th><th>Cis</th><th>Trans</th><th>Cis −logP (median)</th></tr></thead>
+            <tbody>
+              <tr><td>Fixed 10 Mb window</td><td>4,318</td><td>29,336</td><td>7.9</td></tr>
+              <tr><td><strong>LD-based (r²≥0.6)</strong></td><td class="gene">1,463</td><td class="gene">32,191</td><td class="gene">9.1</td></tr>
+            </tbody>
+          </table>
+          <p class="small" style="margin-top:12px;">Adipose example: ~8.5% of peaks change classification between methods because true LD blocks are usually narrower than a flat window assumes.</p>
+        </div>
+
+        <div>
+          <div class="callout warning">
+            <strong>Significance ≠ location</strong>
+            The strongest trans hit reaches −logP 169 while a genuine cis effect (<em>Cftr</em>) sits at only −logP 2.4. Significance and genomic location answer two different questions.
+          </div>
+
+          <div class="callout info">
+            <strong>Self-hit leakage was the biggest pitfall</strong>
+            A narrow LD interval can be smaller than the 4 Mb hotspot bin, letting a cis effect masquerade as trans. The 10 Mb exclusion zone removed ~65% of adipose “significant trans” peaks and six whole artifact bands.
+          </div>
+        </div>
+      </div>
+
+      <figure>
+        <img src="assets/04_adipose_transbands_hotspot_bar_plot.png" alt="Adipose trans-band hotspot bar plot">
+        <figcaption>Figure 2.1 — Top candidate trans-eQTL bins in adipose versus the permutation null mean. Bins exceeding the grey null bars are unlikely to be chance pile-ups.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ================================================================
+         PANEL: ADIPOSE
+         ================================================================ -->
+    <section class="panel" id="panel-adipose" aria-labelledby="tab-adipose">
+      <div class="section-head">
+        <h2><span class="tag adipose">Adipose</span> Confirmed trans-band hotspots</h2>
+        <p>13 candidate bands survived marker-density permutation testing. Bar length = number of regulated genes.</p>
+      </div>
+
+      <div class="card">
+        <div id="adipose-band-bars"></div>
+      </div>
+
+      <div class="card">
+        <span class="tag teal">Deep dive</span>
+        <h3 style="margin-top:10px;">Chr5:68–72 Mb — the strongest, cleanest signal</h3>
+        <div class="two-col" style="margin-top:14px;">
+          <div>
+            <p><strong>~73–74 well-annotated genes</strong>; PC1 explains <strong>~65%</strong> of the module’s variance versus <strong>~24%</strong> for a random gene set — a ~2.7× enrichment. The module is anchored by <em>Tmem245</em> (r = 0.81 with PC1), even though the strongest local cis gene by −logP is <em>Slc44a1</em> (−logP 6.6).</p>
+            <h4>Correlation with candidate driver / key targets</h4>
+            <div id="adipose-driver-corr2"></div>
+            <h4 style="margin-top:18px;">Top target genes</h4>
+            <div class="table-wrap" style="margin-top:8px;">
+              <table style="font-size:12.5px;">
+                <thead><tr><th>Gene</th><th>Role / description</th><th>−logP</th></tr></thead>
+                <tbody>
+                  <tr><td class="gene">Spats1</td><td>spermatogenesis associated, serine-rich 1</td><td>8.0</td></tr>
+                  <tr><td class="gene">Elp4</td><td>elongator acetyltransferase complex subunit 4</td><td>7.6</td></tr>
+                  <tr><td class="gene">Pou2f1</td><td>POU class 2 homeobox 1</td><td>7.3</td></tr>
+                  <tr><td class="gene">Plag1</td><td>PLAG1 zinc finger</td><td>7.1</td></tr>
+                  <tr><td class="gene">Bmal1</td><td>basic helix-loop-helix ARNT like 1</td><td>7.0</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small muted" style="margin-top:10px;"><a href="supplementary/supplementary_gene_lists.html" target="_blank">Full adipose gene list (73 genes) →</a></p>
+          </div>
+          <div>
+            <h4>Why this reads as a real regulatory module</h4>
+            <p>A high shared-variance score can mean either a genuine master regulator or a co-expression artifact. The deciding test is whether the local candidate driver’s own expression explains that shared signal. Here, it does — strongly.</p>
+            <div class="callout success">
+              <strong>High-confidence tier</strong>
+              ≥30 genes, clean purity flags, strong GO/KEGG signal (14 significant terms).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figure>
+        <img src="assets/06_adipose_all_bands_pc1_enrichment.png" alt="Adipose PC1 enrichment across all bands">
+        <figcaption>Figure 4.1 — PC1 variance ratio (band vs. random matched set) for every adipose trans-band. Ratios above ~2 indicate unusually coherent modules.</figcaption>
+      </figure>
+
+      <h3>Adipose trans-bands summary table</h3>
+      <p class="small muted">Click column headers to sort. “No local cis candidate” means no well-annotated local cis gene passed the driver threshold in that band.</p>
+      <div class="table-wrap">
+        <table class="data-table" id="adipose-table">
+          <thead>
+            <tr>
+              <th>Band</th><th>Genes</th><th>PC1 %</th><th>Random PC1 %</th>
+              <th>PC1 ratio</th><th>Mean |r|</th><th>Top cis candidate</th><th>Cis −logP</th>
+            </tr>
+          </thead>
+          <tbody id="adipose-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: LIVER
+         ================================================================ -->
+    <section class="panel" id="panel-liver" aria-labelledby="tab-liver">
+      <div class="section-head">
+        <h2><span class="tag liver">Liver</span> Confirmed trans-band hotspots</h2>
+        <p>Same pipeline applied independently. Only one band clears the high-confidence tier.</p>
+      </div>
+
+      <div class="card">
+        <div id="liver-band-bars"></div>
+      </div>
+
+      <div class="card">
+        <span class="tag teal">Deep dive</span>
+        <h3 style="margin-top:10px;">Chr4:176–184 Mb — the cholesterol biosynthesis regulon</h3>
+        <p>All top targets are sequential enzymes in the mevalonate/cholesterol pathway. The local candidates <em>Rassf8</em> (−logP 19.5) and <em>Etfrf1</em> (−logP 19.0) have no established link to cholesterol regulation.</p>
+
+        <div class="callout warning">
+          <strong>Open question — the driver isn't obvious</strong>
+          Neither <em>Srebf1</em> nor <em>Srebf2</em> sits near this locus. The causal driver may be a regulatory element or structural variant invisible to gene-centric SNP annotation — exactly what the pangenome phase is designed to resolve.
+        </div>
+        <p class="small muted" style="margin-top:14px;"><a href="supplementary/supplementary_gene_lists.html" target="_blank">Full liver gene list (55 genes) →</a></p>
+      </div>
+
+      <figure>
+        <img src="assets/06_liver_all_bands_pc1_enrichment.png" alt="Liver PC1 enrichment across all bands">
+        <figcaption>Figure 5.1 — PC1 variance ratio for every liver trans-band. Only Chr4:176–184 Mb carries a strong pathway enrichment.</figcaption>
+      </figure>
+
+      <h3>Liver trans-bands summary table</h3>
+      <p class="small muted">Click column headers to sort. “No local cis candidate” means no well-annotated local cis gene passed the driver threshold in that band.</p>
+      <div class="table-wrap">
+        <table class="data-table" id="liver-table">
+          <thead>
+            <tr>
+              <th>Band</th><th>Genes</th><th>PC1 %</th><th>Random PC1 %</th>
+              <th>PC1 ratio</th><th>Mean |r|</th><th>Top cis candidate</th><th>Cis −logP</th>
+            </tr>
+          </thead>
+          <tbody id="liver-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: GENES / DRIVERS
+         ================================================================ -->
+    <section class="panel" id="panel-genes" aria-labelledby="tab-genes">
+      <div class="section-head">
+        <h2>Candidate driver genes</h2>
+        <p>What the pipeline found and what the literature says about each. Click the PubMed / GeneCards links under each card to verify claims.</p>
+      </div>
+
+      <div class="callout info">
+        <strong>How to read the literature links</strong>
+        Claims are backed by searchable PubMed queries and GeneCards entries, not by memory. Use the links to check the most recent literature before treating any claim as settled.
+        <div style="margin-top:8px;">
+          <a href="https://pubmed.ncbi.nlm.nih.gov/?term=PLAG1+pleiotropic+regulator+body+size+metabolic" target="_blank">PLAG1 literature</a> ·
+          <a href="https://pubmed.ncbi.nlm.nih.gov/?term=BMAL1+circadian+metabolic+adipose" target="_blank">BMAL1 literature</a> ·
+          <a href="https://pubmed.ncbi.nlm.nih.gov/?term=SMPDL3A+LXR+lipid+metabolism+innate+immunity" target="_blank">SMPDL3A literature</a>
+        </div>
+      </div>
+
+      <div class="gene-grid">
+        <div class="gene-card">
+          <div class="gname">Tmem245</div>
+          <div class="role">Adipose · Chr5:68–72 Mb driver</div>
+          <p>No established pathway role; the statistical case (module r=0.81, ~73 regulated genes) is doing the work. Top expression correlate of the adipose circadian–metabolic module.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Tmem245" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Tmem245" target="_blank">PubMed</a></div>
+          <span class="status novel">Novel candidate</span>
+        </div>
+
+        <div class="gene-card">
+          <div class="gname">Plag1</div>
+          <div class="role">Adipose · downstream target</div>
+          <p>Causally confirmed pleiotropic regulator of body size, growth and metabolic traits across cattle, sheep, goats, pigs and horses. Knockout mice show growth retardation.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Plag1" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Plag1" target="_blank">PubMed</a></div>
+          <span class="status established">Well established</span>
+        </div>
+
+        <div class="gene-card">
+          <div class="gname">Bmal1</div>
+          <div class="role">Adipose · downstream target</div>
+          <p>Core circadian clock gene (<em>Arntl</em>). Adipose circadian–metabolic crosstalk makes its co-regulation with <em>Plag1</em> a coherent story rather than a coincidence.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Bmal1" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Bmal1" target="_blank">PubMed</a></div>
+          <span class="status established">Well established</span>
+        </div>
+
+        <div class="gene-card">
+          <div class="gname">Smpdl3a</div>
+          <div class="role">Adipose · Chr20:36–40 Mb driver</div>
+          <p>LXR-regulated enzyme at the interface of lipid metabolism and innate immune signaling (cGAS-STING pathway) — directly relevant to metabolic inflammation.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Smpdl3a" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Smpdl3a" target="_blank">PubMed</a></div>
+          <span class="status established">Well established</span>
+        </div>
+
+        <div class="gene-card">
+          <div class="gname">Tmem178a</div>
+          <div class="role">Adipose · Chr6:12–16 Mb driver</div>
+          <p>ER-membrane calcium-signalling regulator, characterised mainly in bone and airway immune contexts. Adipose relevance is plausible but speculative.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Tmem178a" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Tmem178a" target="_blank">PubMed</a></div>
+          <span class="status open">Open question</span>
+        </div>
+
+        <div class="gene-card">
+          <div class="gname">Zfp605</div>
+          <div class="role">Adipose · Chr12:44–48 Mb driver</div>
+          <p>C2H2 zinc-finger transcription factor. Only computational annotation available (DNA binding, transcriptional regulation); no characterised biological role.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Zfp605" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Zfp605" target="_blank">PubMed</a></div>
+          <span class="status novel">Novel candidate</span>
+        </div>
+
+        <div class="gene-card">
+          <div class="gname">Rab3b</div>
+          <div class="role">Adipose · Chr5:116–124 Mb driver</div>
+          <p>Small GTPase controlling regulated secretory vesicle trafficking, best characterised in neurons and neuroendocrine cells. An adipokine-secretion role would be extrapolation.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Rab3b" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Rab3b" target="_blank">PubMed</a></div>
+          <span class="status open">Open question</span>
+        </div>
+
+        <div class="gene-card">
+          <div class="gname">Rassf8 / Etfrf1</div>
+          <div class="role">Liver · Chr4:176–184 Mb candidates</div>
+          <p>Top local cis genes at the cholesterol biosynthesis hotspot. No established connection to cholesterol/lipid metabolism in the literature.</p>
+          <div class="gene-lookup"><a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Rassf8" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Rassf8" target="_blank">PubMed</a> · <a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=Etfrf1" target="_blank">GeneCards</a> <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Etfrf1" target="_blank">PubMed</a></div>
+          <span class="status open">Open question</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: ENRICHMENT
+         ================================================================ -->
+    <section class="panel" id="panel-enrichment" aria-labelledby="tab-enrichment">
+      <div class="section-head">
+        <h2>Functional enrichment (GO / KEGG)</h2>
+        <p>Over-representation tested against the same well-annotated gene universe used to call the bands.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Adipose Chr5:68–72 Mb — 14 significant terms</h3>
+          <p>Best term: <strong>regulation of RNA metabolic process</strong> (adj. <em>p</em> = 1.55×10⁻⁵).</p>
+          <p>This band reads as a transcriptional/regulatory hub. The presence of <em>Bmal1, Cry1, Npas2, Plag1</em> and <em>Pou2f1</em> among enriched genes is consistent with circadian and transcription-factor-driven regulation.</p>
+        </div>
+
+        <div class="card">
+          <h3>Liver Chr4:176–184 Mb — KEGG steroid biosynthesis</h3>
+          <p>Best term: <strong>Steroid biosynthesis</strong> (adj. <em>p</em> = 7.59×10⁻⁴).</p>
+          <p>Six genes — <em>Cyp51, Dhcr7, Fdft1, Msmo1, Sqle, Tm7sf2</em> — map to the cholesterol/steroid synthetic pathway, a liver-relevant trait.</p>
+        </div>
+      </div>
+
+      <h3>Power considerations</h3>
+      <p>With a ~7,300-gene universe, small bands need very high pathway overlap to survive correction for testing thousands of terms. The table below summarises the empirical power tiers used in this report.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Band size</th><th>Overlapping genes needed</th><th>Fraction of band</th><th>Tier</th></tr></thead>
+          <tbody>
+            <tr><td>8</td><td>4</td><td>50%</td><td>underpowered</td></tr>
+            <tr><td>10</td><td>5</td><td>50%</td><td>marginal</td></tr>
+            <tr><td>20</td><td>6</td><td>30%</td><td>marginal</td></tr>
+            <tr><td>30</td><td>6</td><td>20%</td><td>reliable</td></tr>
+            <tr><td>74 (Chr5:68–72)</td><td>9</td><td>12%</td><td>reliable</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Enrichment summary table</h3>
+      <p class="small muted">Click column headers to sort.</p>
+      <div class="table-wrap">
+        <table class="data-table" id="enrichment-table">
+          <thead>
+            <tr>
+              <th>Tissue</th><th>Band</th><th>Genes</th><th>Power tier</th>
+              <th>Significant terms</th><th>Best adj. p</th><th>Top term</th>
+            </tr>
+          </thead>
+          <tbody id="enrichment-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: PANGENOMICS
+         ================================================================ -->
+    <section class="panel" id="panel-pangenome" aria-labelledby="tab-pangenome">
+      <div class="section-head">
+        <h2>Next step: pangenomics &amp; hidden drivers</h2>
+        <p>Why a single-reference SNP panel may miss the true causal variant, and what to do about it.</p>
+      </div>
+
+      <div class="two-col" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+        <div class="card">
+          <h3>Structural variation</h3>
+          <p>Large SVs can alter expression of many distal genes from a single locus and can sit under a SNP-defined band without being tagged by any lead SNP.</p>
+        </div>
+        <div class="card">
+          <h3>Reference bias</h3>
+          <p>A single reference genome collapses divergent haplotypes. A true regulatory variant may be invisible if the reference is a poor match to HS alleles.</p>
+        </div>
+        <div class="card">
+          <h3>LD tagging failure</h3>
+          <p>If the causal allele is an indel or SV, the best SNP proxy may have low or unstable r², weakening cis calls and inflating apparent trans signals.</p>
+        </div>
+        <div class="card">
+          <h3>Haplotype-resolved effects</h3>
+          <p>Two founder haplotypes can carry different variant combinations. A pangenome lets us test the haplotype as the unit of effect rather than each SNP in isolation.</p>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <strong>Hypothesis to test</strong>
+        Some “unexplained” trans-bands with high PC1 but no obvious local cis driver are driven by structural or pangenome variation that the current SNP panel cannot represent.
+      </div>
+
+      <div class="card">
+        <h3>Proposed way forward</h3>
+        <ol class="step-list">
+          <li><strong>Integrate founder strain assemblies</strong> or a rat pangenome to obtain SV and indel calls in the HS population.</li>
+          <li><strong>Re-run the cis/trans classifier</strong> with SVs included as additional markers; check whether any trans-band collapses into a single SV association.</li>
+          <li><strong>Test band genes against local pangenome haplotypes</strong> at the band locus, not just the lead SNP.</li>
+          <li><strong>Phase short variants and SVs jointly</strong> with graph-genotype imputation, raising the chance the true causal driver is among tested markers.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: GALLERY
+         ================================================================ -->
+    <section class="panel" id="panel-gallery" aria-labelledby="tab-gallery">
+      <div class="section-head">
+        <h2>Interactive plot gallery</h2>
+        <p>Pre-generated Plotly figures. Click any thumbnail to open the full interactive figure in a new tab.</p>
+      </div>
+
+      <h3>Genome-wide views</h3>
+      <div class="gallery-grid">
+        <a class="gallery-item" href="transband_manhattan_adipose.html" target="_blank">
+          <div class="thumb-title">Adipose Manhattan</div>
+          <div class="thumb-desc">Genome-wide cis/trans peaks</div>
+        </a>
+        <a class="gallery-item" href="peirce_cis_trans_ld_adipose.png" target="_blank">
+          <div class="thumb-title">Adipose Peirce plot</div>
+          <div class="thumb-desc">Gene vs. peak position</div>
+        </a>
+        <a class="gallery-item" href="transband_manhattan_liver.html" target="_blank">
+          <div class="thumb-title">Liver Manhattan</div>
+          <div class="thumb-desc">Genome-wide cis/trans peaks</div>
+        </a>
+        <a class="gallery-item" href="peirce_cis_trans_ld_liver.png" target="_blank">
+          <div class="thumb-title">Liver Peirce plot</div>
+          <div class="thumb-desc">Gene vs. peak position</div>
+        </a>
+      </div>
+
+      <h3>Per-band zoom plots — Adipose</h3>
+      <div class="gallery-grid">
+        <a class="gallery-item" href="locuszoom_adipose_chr5_68-70.html" target="_blank">
+          <div class="thumb-title">Adipose Chr5:68–70 Mb</div>
+          <div class="thumb-desc">LocusZoom-style priority band</div>
+        </a>
+      </div>
+
+      <h3>Per-band zoom plots — Liver</h3>
+      <div class="gallery-grid">
+        <a class="gallery-item" href="locuszoom_liver_chr4_177-179.html" target="_blank">
+          <div class="thumb-title">Liver Chr4:177–179 Mb</div>
+          <div class="thumb-desc">LocusZoom-style priority band</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: SUPPLEMENTARY
+         ================================================================ -->
+    <section class="panel" id="panel-supplementary" aria-labelledby="tab-supplementary">
+      <div class="section-head">
+        <h2>Supplementary gene lists</h2>
+        <p>Downloadable gene lists for the top adipose and liver trans-bands, ready for literature review.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <span class="tag adipose">Adipose</span>
+          <h3 style="margin-top:12px;">Chr5:68–72 Mb — 73 target genes</h3>
+          <p>The full list of genes whose trans-eQTL peaks fall inside the top adipose band, sorted by peak −logP.</p>
+          <a class="download" href="supplementary/adipose_chr5_68_72Mb_genes.csv" download>Download CSV</a>
+          <a class="download" href="supplementary/supplementary_gene_lists.html" target="_blank" style="margin-left:8px;">Open interactive table →</a>
+        </div>
+
+        <div class="card">
+          <span class="tag liver">Liver</span>
+          <h3 style="margin-top:12px;">Chr4:176–184 Mb — 55 target genes</h3>
+          <p>The full list of genes whose trans-eQTL peaks fall inside the top liver band, sorted by peak −logP.</p>
+          <a class="download" href="supplementary/liver_chr4_176_184Mb_genes.csv" download>Download CSV</a>
+          <a class="download" href="supplementary/supplementary_gene_lists.html" target="_blank" style="margin-left:8px;">Open interactive table →</a>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <strong>How these lists were built</strong>
+        They were extracted from the validated pipeline output <code>04_*_transbands_all_significant_peaks.csv</code> by filtering peaks to the reported band coordinates. Each row gives the gene symbol, description, peak −logP, effect size, peak location, and the gene’s own genomic location.
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANEL: METHODS & REFERENCES
+         ================================================================ -->
+    <section class="panel" id="panel-methods" aria-labelledby="tab-methods">
+      <div class="section-head">
+        <h2>Methods snapshot &amp; references</h2>
+        <p>The validation chain in order, and the literature behind the design choices.</p>
+      </div>
+
+      <div class="card">
+        <ol class="step-list">
+          <li><strong>Step 02 — Cis/trans call:</strong> LD-based r² ≥ 0.6 interval around each peak lead marker; applied to <em>all</em> peaks so nothing is lost before filtering.</li>
+          <li><strong>Step 03 — Well-annotated filter:</strong> Drops LOC/RIKEN/Gm/pseudogene/EST-clone entries; all subsequent analyses use this filtered set.</li>
+          <li><strong>Step 04 — Trans-bands:</strong> Restricted to well-annotated trans peaks with Peak −logP ≥ 5.5; 4 Mb bins, marker-density-weighted permutation (5,000 shuffles), empirical p-values, adjacent-bin merging, plus 10 Mb self-hit exclusion zone.</li>
+          <li><strong>Step 06 — Diagnostics:</strong> PCA on z-scored expression, matched-size random baseline, top local cis candidate restricted to well-annotated genes inside the band.</li>
+          <li><strong>Step 07 — Enrichment:</strong> g:Profiler, organism <em>rnorvegicus</em>, sources GO:BP/CC/MF + KEGG, g:SCS multiple-testing correction; universe = well-annotated genes from step 03 with 4 ≤ −logP ≤ 80.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>References</h3>
+        <ul class="refs">
+          <li>Peirce et al. (2006) <em>Mammalian Genome</em> — cis/trans calling and multiple testing in eQTL mapping.</li>
+          <li>Alberts et al. (2007) <em>PLoS ONE</em> — why arbitrary cis windows produce false cis calls.</li>
+          <li>Breitling et al. (2008) <em>PLoS Genetics</em> — genetical genomics hotspots.</li>
+          <li>Mozhui et al. (2008) <em>PLoS Genetics</em> — co-expression vs. true trans-regulatory hotspots.</li>
+          <li>Churchill &amp; Doerge (1994) <em>Genetics</em> — permutation thresholds in QTL mapping.</li>
+          <li>Kolberg et al. (2023) <em>Nucleic Acids Research</em> — g:Profiler/g:SCS.</li>
+          <li>Reimand et al. (2019) <em>Nature Protocols</em> — gene-list size and enrichment power.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    HS Rat eQTL Interactive Report · Generated from validated pipeline steps 1–9 ·
+    Open <code>final_hs_rat_eqtl_report.html</code> in any modern browser.
+  </footer>
+
+  <!-- ================================================================
+       JAVASCRIPT
+       All data and interactivity are kept inline for portability.
+       ================================================================ -->
+  <script>
+    /* ------------------------------------------------------------------
+       1. CONFIGURATION: tab definitions
+       ------------------------------------------------------------------ */
+    const TABS = [
+      { id: 'abstract',   label: 'Abstract' },
+      { id: 'overview',   label: 'Overview' },
+      { id: 'objectives', label: 'Objectives' },
+      { id: 'cistrans',   label: 'Cis / Trans' },
+      { id: 'adipose',    label: 'Adipose' },
+      { id: 'liver',      label: 'Liver' },
+      { id: 'genes',      label: 'Drivers' },
+      { id: 'enrichment', label: 'Enrichment' },
+      { id: 'pangenome',  label: 'Pangenome' },
+      { id: 'gallery',    label: 'Gallery' },
+      { id: 'supplementary', label: 'Supplementary' },
+      { id: 'methods',    label: 'Methods' },
+    ];
+
+    /* ------------------------------------------------------------------
+       2. DATA: band tables from the validated pipeline output
+       ------------------------------------------------------------------ */
+    const ADIPOSE_BANDS = [
+      { band: "Chr9:56-60Mb",   n_genes: 31, pc1: 68.5, random_pc1: 22.6, ratio: 3.03, meanAbsR: 0.666, driver: "Aox3",    driverLogp: 25.5 },
+      { band: "Chr6:12-16Mb",   n_genes: 10, pc1: 61.1, random_pc1: 20.4, ratio: 2.99, meanAbsR: 0.561, driver: "Tmem178a",driverLogp: 81.6 },
+      { band: "Chr1:228-232Mb", n_genes:  8, pc1: 68.3, random_pc1: 24.0, ratio: 2.84, meanAbsR: 0.594, driver: "",        driverLogp: null },
+      { band: "Chr5:68-72Mb",   n_genes: 73, pc1: 65.8, random_pc1: 24.5, ratio: 2.69, meanAbsR: 0.635, driver: "Slc44a1", driverLogp: 6.6 },
+      { band: "Chr1:60-64Mb",   n_genes:  8, pc1: 74.2, random_pc1: 28.7, ratio: 2.58, meanAbsR: 0.703, driver: "Vom2r16", driverLogp: 61.4 },
+      { band: "Chr12:44-48Mb",  n_genes: 39, pc1: 64.9, random_pc1: 28.0, ratio: 2.32, meanAbsR: 0.626, driver: "",        driverLogp: null },
+      { band: "Chr20:16-20Mb",  n_genes:  8, pc1: 68.0, random_pc1: 29.5, ratio: 2.30, meanAbsR: 0.619, driver: "",        driverLogp: null },
+      { band: "Chr2:204-208Mb", n_genes:  9, pc1: 60.6, random_pc1: 26.5, ratio: 2.29, meanAbsR: 0.554, driver: "Gpr88",   driverLogp: 16.6 },
+      { band: "Chr5:116-124Mb", n_genes: 35, pc1: 51.9, random_pc1: 26.5, ratio: 1.96, meanAbsR: 0.462, driver: "Rab3b",   driverLogp: 44.7 },
+      { band: "Chr2:184-192Mb", n_genes: 33, pc1: 61.5, random_pc1: 32.9, ratio: 1.87, meanAbsR: 0.588, driver: "Olfml3",  driverLogp: 29.4 },
+      { band: "Chr20:36-40Mb",  n_genes: 12, pc1: 71.1, random_pc1: 41.6, ratio: 1.71, meanAbsR: 0.681, driver: "Nt5dc1",  driverLogp: 28.7 },
+      { band: "Chr4:132-136Mb", n_genes: 10, pc1: 39.8, random_pc1: 23.8, ratio: 1.67, meanAbsR: 0.299, driver: "",        driverLogp: null },
+      { band: "Chr18:20-24Mb",  n_genes:  9, pc1: 47.3, random_pc1: 37.5, ratio: 1.26, meanAbsR: 0.374, driver: "",        driverLogp: null },
+    ];
+
+    const LIVER_BANDS = [
+      { band: "Chr1:52-56Mb",   n_genes:  9, pc1: 64.2, random_pc1: 23.5, ratio: 2.74, meanAbsR: 0.593, driver: "",        driverLogp: null },
+      { band: "Chr7:120-124Mb", n_genes: 26, pc1: 51.2, random_pc1: 22.2, ratio: 2.31, meanAbsR: 0.478, driver: "Abcd2",   driverLogp: 20.4 },
+      { band: "Chr1:140-144Mb", n_genes: 10, pc1: 50.4, random_pc1: 22.8, ratio: 2.21, meanAbsR: 0.432, driver: "Tmem135", driverLogp: 6.1 },
+      { band: "Chr5:28-32Mb",   n_genes:  7, pc1: 62.0, random_pc1: 33.9, ratio: 1.83, meanAbsR: 0.519, driver: "Calb1",   driverLogp: 12.9 },
+      { band: "Chr4:168-172Mb", n_genes: 24, pc1: 55.2, random_pc1: 31.9, ratio: 1.73, meanAbsR: 0.515, driver: "Arhgdib", driverLogp: 9.3 },
+      { band: "Chr4:176-184Mb", n_genes: 55, pc1: 48.4, random_pc1: 32.7, ratio: 1.48, meanAbsR: 0.459, driver: "Rassf8",  driverLogp: 19.5 },
+      { band: "Chr1:148-152Mb", n_genes: 26, pc1: 44.1, random_pc1: 31.1, ratio: 1.42, meanAbsR: 0.384, driver: "",        driverLogp: null },
+      { band: "Chr6:24-28Mb",   n_genes: 13, pc1: 44.1, random_pc1: 38.4, ratio: 1.15, meanAbsR: 0.369, driver: "Krtcap3", driverLogp: 66.6 },
+    ];
+
+    const ENRICHMENT_SUMMARY = [
+      { tissue: "adipose", band: "Chr5:68-72Mb",   n_genes: 73, tier: "reliable (>=30)",   n_terms: 14, best_p: 1.5509800848917387e-05, top_term: "regulation of RNA metabolic process" },
+      { tissue: "adipose", band: "Chr2:184-192Mb", n_genes: 33, tier: "reliable (>=30)",   n_terms: 1,  best_p: 0.010640063865385827,    top_term: "Protein processing in endoplasmic reticulum" },
+      { tissue: "adipose", band: "Chr12:44-48Mb",  n_genes: 39, tier: "reliable (>=30)",   n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "adipose", band: "Chr5:116-124Mb", n_genes: 35, tier: "reliable (>=30)",   n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "adipose", band: "Chr9:56-60Mb",   n_genes: 31, tier: "reliable (>=30)",   n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "adipose", band: "Chr20:36-40Mb",  n_genes: 12, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "adipose", band: "Chr4:132-136Mb", n_genes: 10, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "adipose", band: "Chr6:12-16Mb",   n_genes: 10, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "liver",   band: "Chr4:176-184Mb", n_genes: 55, tier: "reliable (>=30)",   n_terms: 1,  best_p: 0.0007588049788942109,   top_term: "Steroid biosynthesis" },
+      { tissue: "liver",   band: "Chr7:120-124Mb", n_genes: 26, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "liver",   band: "Chr1:148-152Mb", n_genes: 26, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "liver",   band: "Chr4:168-172Mb", n_genes: 24, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "liver",   band: "Chr6:24-28Mb",  n_genes: 13, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+      { tissue: "liver",   band: "Chr1:140-144Mb", n_genes: 10, tier: "marginal (10-29)",  n_terms: 0,  best_p: null,                     top_term: "" },
+    ];
+
+
+    /* ------------------------------------------------------------------
+       3. TAB SWITCHING
+       ------------------------------------------------------------------ */
+    function buildTabs() {
+      const nav = document.getElementById('navInner');
+      TABS.forEach((tab, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn' + (i === 0 ? ' active' : '');
+        btn.textContent = tab.label;
+        btn.dataset.target = tab.id;
+        btn.id = 'tab-' + tab.id;
+        btn.addEventListener('click', () => switchTab(tab.id));
+        nav.appendChild(btn);
+      });
+    }
+
+    function switchTab(id) {
+      // Update nav buttons
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.target === id);
+      });
+      // Show the selected panel, hide others
+      document.querySelectorAll('.panel').forEach(p => {
+        p.classList.toggle('active', p.id === 'panel-' + id);
+      });
+      // Return to top for a consistent reading experience
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ------------------------------------------------------------------
+       4. RENDERING HELPERS
+       ------------------------------------------------------------------ */
+
+    /**
+     * Render a simple horizontal bar chart from an array of band objects.
+     * @param {string} containerId - element to populate
+     * @param {Array} data - band objects with locus and genes keys
+     * @param {string} colorClass - CSS class for the fill colour
+     */
+    function renderBarChart(containerId, data, colorClass) {
+      const max = Math.max(...data.map(d => d.n_genes));
+      const el = document.getElementById(containerId);
+      data.forEach(d => {
+        const pct = Math.max(5, (d.n_genes / max) * 100);
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        row.title = `${d.band}: ${d.n_genes} genes; PC1 ratio ${d.ratio.toFixed(2)}`;
+        row.innerHTML = `
+          <div class="bar-label">${d.band}</div>
+          <div class="bar-track">
+            <div class="bar-fill ${d.flagged ? 'flagged' : colorClass}" style="width:${pct}%">
+              <span>${d.n_genes}</span>
+            </div>
+          </div>
+          <div class="bar-meta">${d.flagged ? 'flagged: likely noise' : d.n_genes + ' genes'}</div>
+        `;
+        el.appendChild(row);
+      });
+    }
+
+    /**
+     * Render a correlation mini-bar for a candidate driver and key targets.
+     */
+    function renderCorrelations(containerId, corrs) {
+      const el = document.getElementById(containerId);
+      corrs.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'corr-item';
+        row.innerHTML = `
+          <div class="corr-name">${c.name}</div>
+          <div class="corr-track"><div class="corr-fill" style="width:${c.val * 100}%"></div></div>
+          <div class="corr-val">r=${c.val.toFixed(2)}</div>
+        `;
+        el.appendChild(row);
+      });
+    }
+
+    /**
+     * Populate any data table from a rows array and a column specification.
+     */
+    function renderTable(tbodyId, rows, columns) {
+      const tbody = document.getElementById(tbodyId);
+      tbody.innerHTML = rows.map(row => {
+        const cells = columns.map(col => {
+          let val = row[col.key];
+          if (col.key === 'driverLogp' || col.key === 'best_p') {
+            val = (val == null) ? '—' : (val < 0.001 ? val.toExponential(2) : val.toFixed(4));
+          } else if (col.key === 'ratio' || col.key === 'meanAbsR') {
+            val = val.toFixed(2);
+          } else if (col.key === 'pc1' || col.key === 'random_pc1') {
+            val = val.toFixed(1) + '%';
+          } else if (col.key === 'driver') {
+            val = (val == null || val === '') ? 'No local cis candidate' : val;
+          } else {
+            val = (val == null || val === '') ? '—' : val;
+          }
+          return `<td>${val}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+    }
+
+    /**
+     * Attach click handlers to table headers so users can sort columns.
+     */
+    function setupSorting(tableId) {
+      const table = document.getElementById(tableId);
+      if (!table) return;
+      const headers = table.querySelectorAll('th');
+      const tbody = table.querySelector('tbody');
+      headers.forEach((th, idx) => {
+        th.addEventListener('click', () => {
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+          const dir = th.dataset.dir === 'asc' ? -1 : 1;
+          th.dataset.dir = dir === 1 ? 'asc' : 'desc';
+          rows.sort((a, b) => {
+            const av = a.children[idx].textContent.trim();
+            const bv = b.children[idx].textContent.trim();
+            const an = parseFloat(av.replace(/,/g, ''));
+            const bn = parseFloat(bv.replace(/,/g, ''));
+            if (!isNaN(an) && !isNaN(bn) && av !== '—' && bv !== '—') {
+              return (an - bn) * dir;
+            }
+            return av.localeCompare(bv) * dir;
+          });
+          rows.forEach(r => tbody.appendChild(r));
+        });
+      });
+    }
+
+
+    /* ------------------------------------------------------------------
+       5. INITIALISATION
+       ------------------------------------------------------------------ */
+    document.addEventListener('DOMContentLoaded', () => {
+      buildTabs();
+
+      // Top band bars (sorted by gene count descending)
+      renderBarChart('adipose-band-bars',
+        [...ADIPOSE_BANDS].sort((a, b) => b.n_genes - a.n_genes), 'adipose');
+      renderBarChart('liver-band-bars',
+        [...LIVER_BANDS].sort((a, b) => b.n_genes - a.n_genes), 'liver');
+
+      // Driver correlation mini-bars for the top adipose module
+      renderCorrelations('adipose-driver-corr', [
+        { name: 'Tmem245', val: 0.81, note: 'local driver' },
+        { name: 'Pou2f1',  val: 0.96, note: 'target' },
+        { name: 'Plag1',   val: 0.65, note: 'target' },
+        { name: 'Bmal1',   val: 0.56, note: 'target' },
+      ]);
+      renderCorrelations('adipose-driver-corr2', [
+        { name: 'Tmem245', val: 0.81, note: 'local driver' },
+        { name: 'Pou2f1',  val: 0.96, note: 'target' },
+        { name: 'Plag1',   val: 0.65, note: 'target' },
+        { name: 'Bmal1',   val: 0.56, note: 'target' },
+      ]);
+
+      // Full data tables
+      renderTable('adipose-table-body', ADIPOSE_BANDS, [
+        { key: 'band' }, { key: 'n_genes' }, { key: 'pc1' }, { key: 'random_pc1' },
+        { key: 'ratio' }, { key: 'meanAbsR' }, { key: 'driver' }, { key: 'driverLogp' }
+      ]);
+      renderTable('liver-table-body', LIVER_BANDS, [
+        { key: 'band' }, { key: 'n_genes' }, { key: 'pc1' }, { key: 'random_pc1' },
+        { key: 'ratio' }, { key: 'meanAbsR' }, { key: 'driver' }, { key: 'driverLogp' }
+      ]);
+      renderTable('enrichment-table-body', ENRICHMENT_SUMMARY, [
+        { key: 'tissue' }, { key: 'band' }, { key: 'n_genes' }, { key: 'tier' },
+        { key: 'n_terms' }, { key: 'best_p' }, { key: 'top_term' }
+      ]);
+
+      // Make tables sortable
+      setupSorting('adipose-table');
+      setupSorting('liver-table');
+      setupSorting('enrichment-table');
+
+      // Build the per-band Plotly gallery
+    });
+  </script>
 </body>
 </html>
